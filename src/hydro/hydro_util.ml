@@ -94,7 +94,7 @@ let bool_cmp b1 b2 =
 
 let float_cmp (f1:float) (f2:float) : int =
   Pervasives.compare f1 f2
-  
+
 let int_opt_cmp (io1:int option) (io2:int option) : int =
   match io1, io2 with
     | Some n1, Some n2 -> n1 - n2
@@ -109,10 +109,10 @@ let endpoint_cmp (ep1:endpoint) (ep2:endpoint) =
 	    | `TCP tcp2 ->
 		or_cmp
 		  (String.compare tcp1#host tcp2#host)
-		  (lazy 
+		  (lazy
 		     (or_cmp
 			(tcp1#port - tcp2#port)
-			(lazy 
+			(lazy
 			   (or_cmp
 			      (Int32.compare tcp1#timeout tcp2#timeout)
 			      (lazy (bool_cmp tcp1#compress tcp2#compress))))))
@@ -140,7 +140,7 @@ let endpoint_cmp (ep1:endpoint) (ep2:endpoint) =
 					  (udp1#enc_major - udp2#enc_major)
 					  (lazy
 					     (or_cmp
-						(udp1#enc_minor - 
+						(udp1#enc_minor -
 						   udp2#enc_minor)
 						(lazy
 						   (bool_cmp
@@ -156,10 +156,10 @@ let endpoint_cmp (ep1:endpoint) (ep2:endpoint) =
 	    | `SSL ssl2 ->
 		or_cmp
 		  (String.compare ssl1#host ssl2#host)
-		  (lazy 
+		  (lazy
 		     (or_cmp
 			(ssl1#port - ssl2#port)
-			(lazy 
+			(lazy
 			   (or_cmp
 			      (Int32.compare ssl1#timeout ssl2#timeout)
 			      (lazy (bool_cmp ssl1#compress ssl2#compress))))))
@@ -340,7 +340,7 @@ let rec htype_to_string =
     | TEnum _ -> "enum"
     | TStruct s ->
 	"{" ^
-	  (String.concat "; " 
+	  (String.concat "; "
 	     (List.map
 		(fun (n,t) -> n ^ "=" ^ htype_to_string t)
 		(Array.to_list s))) ^

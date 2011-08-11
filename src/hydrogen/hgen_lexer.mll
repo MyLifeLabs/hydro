@@ -17,7 +17,7 @@ let dot_float_mantisse = ( digit* '.' digit+ ) | ( digit+ '.' )
 let dot_float_literal = dot_float_mantisse exponent?
 let exp_float_literal = digit+ exponent
 let float_literal =
-    [ '+' '-' ]? ( dot_float_literal | exp_float_literal ) 
+    [ '+' '-' ]? ( dot_float_literal | exp_float_literal )
 
 let after_ast =
     [ ^ '*' '/' ] [ ^ '*' ]*
@@ -35,7 +35,7 @@ rule scan bolloc =
         { let loc = location !bolloc lexbuf in
 	  match id with
 	    | "bool"        -> K_BOOL loc
-	    | "enum"        -> K_ENUM loc 
+	    | "enum"        -> K_ENUM loc
 	    | "implements"  -> K_IMPLEMENTS loc
 	    | "module"      -> K_MODULE loc
 	    | "struct"      -> K_STRUCT loc
@@ -69,7 +69,7 @@ rule scan bolloc =
 	  let s = String.concat "" (scan_string bolloc lexbuf) in
 	  let loc2 = location !bolloc lexbuf in
           STRING_LITERAL(s, loc1, loc2) }
-    | "//" [^ '\n']* '\n' 
+    | "//" [^ '\n']* '\n'
         { let bolloc' = bolloc_nl !bolloc lexbuf in
 	  bolloc := bolloc';
           scan bolloc lexbuf
@@ -122,9 +122,9 @@ rule scan bolloc =
 	{ LDBRACK (location !bolloc lexbuf) }
     | "]]"
 	{ RDBRACK (location !bolloc lexbuf) }
-    | '#' blank* ("line" blank+)? (digit+ as d) blank* '\n' 
+    | '#' blank* ("line" blank+)? (digit+ as d) blank* '\n'
         { if at_bol !bolloc lexbuf then (
-            let bolloc' = 
+            let bolloc' =
               { (bolloc_nl !bolloc lexbuf) with line = int_of_string d } in
 	    bolloc := bolloc';
             scan bolloc lexbuf
@@ -133,11 +133,11 @@ rule scan bolloc =
 	    let loc = location !bolloc lexbuf in
 	    raise(Lexical_error(loc, "Unexpected character"))
         }
-    | '#' blank* ("line" blank+)? (digit+ as d) blank+ 
-                 '"' ([^ '"' ]* as name) '"' [^ '\n' ]* '\n' 
+    | '#' blank* ("line" blank+)? (digit+ as d) blank+
+                 '"' ([^ '"' ]* as name) '"' [^ '\n' ]* '\n'
         { if at_bol !bolloc lexbuf then (
-	    let bolloc' = 
-              { (bolloc_nl !bolloc lexbuf) with 
+	    let bolloc' =
+              { (bolloc_nl !bolloc lexbuf) with
                   file = name;
                   line = int_of_string d
               } in
@@ -148,7 +148,7 @@ rule scan bolloc =
 	    let loc = location !bolloc lexbuf in
 	    raise(Lexical_error(loc,"Unexpected character"))
         }
-    | blank + 
+    | blank +
        { scan bolloc lexbuf }
     | '\n'
        { let bolloc' = bolloc_nl !bolloc lexbuf in
@@ -157,18 +157,18 @@ rule scan bolloc =
     | eof
        { EOF (location !bolloc lexbuf) }
     | _
-       { 
+       {
 	 let loc = location !bolloc lexbuf in
 	 raise(Lexical_error(loc,"Unexpected character"))
        }
 
 and scan_string bolloc =
   parse
-    | "\n" 
+    | "\n"
        { let loc = location !bolloc lexbuf in
 	 raise(Lexical_error(loc,"Newline in string"))
        }
-    | eof 
+    | eof
        { let loc = location !bolloc lexbuf in
 	 raise(Lexical_error(loc,"EOF in string"))
        }
@@ -200,12 +200,12 @@ and scan_string bolloc =
        { let n = int_of_string ("0x" ^ s) in
 	 let loc = location !bolloc lexbuf in
 	 if n > 255 then raise(Lexical_error(loc,"Character out of range"));
-	 String.make 1 (Char.chr n) :: scan_string bolloc lexbuf 
+	 String.make 1 (Char.chr n) :: scan_string bolloc lexbuf
        }
-    | '\\' '\n' 
+    | '\\' '\n'
        { let bolloc' = bolloc_nl !bolloc lexbuf in
          bolloc := bolloc';
-	 "\n" :: scan_string bolloc lexbuf 
+	 "\n" :: scan_string bolloc lexbuf
        }
     | '\\' (_ as c)
        { String.make 1 c :: scan_string bolloc lexbuf }

@@ -60,7 +60,7 @@ type extended_proxy_addr =
 
 and extended_proxy_parameters =
     [ proxy_parameters
-    | `Connectors of 
+    | `Connectors of
 	  (Hydro_connector.client_connector * client_params) list
     ]
 
@@ -147,7 +147,7 @@ object
   method client_pool : pool_t
     (** The pool of clients with active connections to servers *)
 
-  method default_proxy_conf : proxy_conf_t 
+  method default_proxy_conf : proxy_conf_t
     (** The default configuration for new proxies (can be changed per proxy) *)
 end
   (** The environment of proxies, usually shared by all proxies in the program
@@ -155,9 +155,9 @@ end
 
 and proxy_resolver_t =
 object
-  method resolve : 
-           extended_proxy_addr -> 
-           ((Hydro_connector.client_connector * 
+  method resolve :
+           extended_proxy_addr ->
+           ((Hydro_connector.client_connector *
 	       client_params) list Lazy.t -> unit) ->
            proxy_env_t ->
              unit
@@ -171,18 +171,18 @@ and proxy_t =
 object
   method hydro_env : proxy_env_t
     (** Return the proxy environment *)
-    
+
   method hydro_id : identity
     (** Return the identity of the object the proxy represents *)
 
   method hydro_facet : string option
     (** Return the facet, if used *)
 
-  method hydro_twoway_call : 
-           hintf -> string -> value array -> call_params -> 
+  method hydro_twoway_call :
+           hintf -> string -> value array -> call_params ->
            (Hydro_endpoint.Client.response -> unit) ->
              unit
-    (** [hydro_twoway_call hi name args params pass_result]: 
+    (** [hydro_twoway_call hi name args params pass_result]:
         Perform a twoway call to the function [name] of interface [hi],
         and pass the arguments [args] as input. The [params] control the
         way the call is done. Once a result or error is available,
@@ -203,11 +203,11 @@ object
     (** Return the current proxy configuration *)
 
   method hydro_set_monitor : (proxy_t -> managed_client_t -> bool) -> unit
-    (** [hydro_set_monitor mon]: The function [mon] is called whenever 
+    (** [hydro_set_monitor mon]: The function [mon] is called whenever
         a call is to be done. It is called as [mon proxy mc]. If it returns
         [true], the call will be done using managed client [mc]. If it
         returns [false], this client is considered as dead, and is skipped.
-        The function [mon] is free to deactivate the host or the port 
+        The function [mon] is free to deactivate the host or the port
         in the pool.
      *)
 
@@ -238,7 +238,7 @@ object
 			     client_params
 			   ) list ->
                                 managed_client_t list
-    (** Request clients from the pool *)				  
+    (** Request clients from the pool *)
 
   method deactivate_host : Unix.inet_addr -> float -> unit
     (** Deactivate the host for this number of seconds *)
@@ -274,7 +274,7 @@ object
   method reset : unit -> unit
     (** Shuts all clients down, and forget any deactivations *)
 
-  method is_available : Unix.inet_addr -> network_port option -> 
+  method is_available : Unix.inet_addr -> network_port option ->
                         shared_or_private -> float -> bool
     (** This method is called by the pool implementation to check for
         the availability of a service. It is exposed in the public
@@ -289,7 +289,7 @@ and managed_client_t =
 object
   method host_port : (Unix.inet_addr * int) option
     (** Return the host and port of the server this managed client is
-        bound to. 
+        bound to.
      *)
 
   method client : Hydro_endpoint.Client.t
@@ -362,13 +362,13 @@ val modify_proxy_conf :
       input configuration.
    *)
 
-val proxy_resolver : 
+val proxy_resolver :
        ?domain_resolver:domain_resolver ->
        client_params -> proxy_resolver_t
   (** The default resolver looks for available endpoints and returns them
       in the order they occur in the address. If possible, DNS lookups
       are done.
-    
+
       The passed client params serve as the base params. Depending on the
       endpoint, the params are modified:
       - If the endpoint specifies a timeout, the [trans_timeout] of the
@@ -381,7 +381,7 @@ val proxy_resolver :
 
    *)
 
-val shuffle : 
+val shuffle :
       Random.State.t ->
       proxy_resolver_t ->
         proxy_resolver_t
@@ -389,7 +389,7 @@ val shuffle :
       they are in random order
    *)
 
-val proxy : 
+val proxy :
         env:proxy_env_t ->
         addr:extended_proxy_addr ->
         unit ->

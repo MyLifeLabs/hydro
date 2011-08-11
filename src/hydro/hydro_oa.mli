@@ -12,7 +12,7 @@ open Hydro_types
 
 
 exception Identity_exists of identity
-exception Object_exists of Hydro_lm.interface_base 
+exception Object_exists of Hydro_lm.interface_base
 
 
 class type object_adapter_t =

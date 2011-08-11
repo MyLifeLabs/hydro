@@ -15,16 +15,16 @@ object
   method result : 't
 end
 
-class type r_Ice_Object_ice_ping = 
+class type r_Ice_Object_ice_ping =
   [unit] r_simple_response
 
-class type r_Ice_Object_ice_id = 
+class type r_Ice_Object_ice_id =
   [string] r_simple_response
 
-class type r_Ice_Object_ice_ids = 
+class type r_Ice_Object_ice_ids =
   [string array] r_simple_response
 
-class type r_Ice_Object_ice_isA = 
+class type r_Ice_Object_ice_isA =
   [bool] r_simple_response
 
 let to_r_Ice_Object_ice_ping (result : Hydro_lm.client_response) =
@@ -128,10 +128,10 @@ end
 
 
 class pc_Ice_Object proxy_env pr =
-  let proxy = 
+  let proxy =
     Hydro_proxy.proxy
       ~env:proxy_env
-      ~addr:(Hydro_lm.Unsafe.unwrap_proxy (pr : pr_Ice_Object) 
+      ~addr:(Hydro_lm.Unsafe.unwrap_proxy (pr : pr_Ice_Object)
 	       : Hydro_types.proxy_addr :> Hydro_proxy.extended_proxy_addr)
       () in
 object(self)
@@ -144,7 +144,7 @@ end
 let pc_Ice_Object = new pc_Ice_Object
 
 
-let unchecked_pr_Ice_Object pr = 
+let unchecked_pr_Ice_Object pr =
   Hydro_lm.Unsafe.wrap_proxy (Hydro_lm.Unsafe.unwrap_proxy pr)
 
 
@@ -162,27 +162,27 @@ type uncallable
 
 class type oi_Ice_Object =
 object
-  method ice_ping : unit -> 
-                    (rr_Ice_Object_ice_ping -> unit) -> 
+  method ice_ping : unit ->
+                    (rr_Ice_Object_ice_ping -> unit) ->
                     (uncallable -> unit) ->
                     Hydro_types.session ->
                       unit
-  method ice_id : unit -> 
-                  (rr_Ice_Object_ice_id -> unit) -> 
+  method ice_id : unit ->
+                  (rr_Ice_Object_ice_id -> unit) ->
                   (uncallable -> unit) ->
                   Hydro_types.session ->
                       unit
-  method ice_ids : unit -> 
-                   (rr_Ice_Object_ice_ids -> unit) -> 
+  method ice_ids : unit ->
+                   (rr_Ice_Object_ice_ids -> unit) ->
                    (uncallable -> unit) ->
                    Hydro_types.session ->
                       unit
-  method ice_isA : string -> 
-                   (rr_Ice_Object_ice_isA -> unit) -> 
+  method ice_isA : string ->
+                   (rr_Ice_Object_ice_isA -> unit) ->
                    (uncallable -> unit) ->
                    Hydro_types.session ->
                       unit
-  method hydro_invoke_operation : 
+  method hydro_invoke_operation :
     string -> Hydro_types.value array -> Hydro_types.session -> unit
   method hydro_effective_id :
     string
@@ -201,8 +201,8 @@ exception O_Ice_Object of o_Ice_Object
 
 
 let as_Ice_Object ov =
-  try 
-    let _ = 
+  try
+    let _ =
       (ov : #object_base :> object_value) # hydro_inflate "::Ice::Object" in
     assert false
   with
@@ -246,7 +246,7 @@ let dec_Ice_Object slices =
 	( () (* ,parent_vals *), slices')
     | _ ->
 	raise(Unmarshal_error("Class value is not an ::Ice::Object"))
-	
+
 
 class mk_od_Ice_Object (facets : unit) =
 object
@@ -275,7 +275,7 @@ end
 let enc_Ice_Object (od : #od_Ice_Object) =
   let slice = `Decoded("::Ice::Object",
 		       [| (* of_XXX ! (od # facets) *)
-			  VSequence [| |] 
+			  VSequence [| |]
 		       |]) in
   [ slice ]
 
@@ -305,7 +305,7 @@ let no_emit_exn _ = assert false
 
 let dispatch_Ice_Object obj opname =
   match opname with
-    | "ice_ping" -> 
+    | "ice_ping" ->
 	(fun in_args session ->
 	   let emit _ = session # emit_result VNothing [| |] in
 	   obj # ice_ping () emit no_emit_exn session
@@ -315,7 +315,7 @@ let dispatch_Ice_Object obj opname =
 	   let emit rr = session # emit_result (VString rr#result) [| |] in
 	   obj # ice_id () emit no_emit_exn session
 	)
-    | "ice_ids" -> 
+    | "ice_ids" ->
 	(fun in_args session ->
 	   let to_val a =
 	     VSequence (Array.map (fun s -> VString s) a) in
@@ -336,13 +336,13 @@ let dispatch_Ice_Object obj opname =
 
 class ops_Ice_Object typeid typeids : oi_Ice_Object =
 object(self)
-  method ice_ping () emit emit_exn session = 
+  method ice_ping () emit emit_exn session =
     emit (object method result = () end)
-  method ice_id () emit emit_exn session = 
+  method ice_id () emit emit_exn session =
     emit (object method result = typeid end)
-  method ice_ids () emit emit_exn session = 
+  method ice_ids () emit emit_exn session =
     emit (object method result = typeids end)
-  method ice_isA argid emit emit_exn session = 
+  method ice_isA argid emit emit_exn session =
     (* TODO: case insentivity *)
     let b = Array.fold_left (fun b id -> b || argid=id) false typeids in
     emit (object method result = b end)
@@ -430,7 +430,7 @@ let defterm_Ice_Object =
 	    );
 	  ]
       end : Hydro_types.hintf
-    ) 
+    )
 
 
 let class_defterm_Ice_Object =
@@ -445,7 +445,7 @@ let class_defterm_Ice_Object =
 
 let fill_system sys =
   let intf = Lazy.force defterm_Ice_Object in
-  CiHashtbl.add 
+  CiHashtbl.add
     sys#interfaces
     intf#name
     intf;

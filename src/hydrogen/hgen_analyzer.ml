@@ -27,7 +27,7 @@ let parse filename f =
 open TS
 open Hgen_util.TS_util
 
-(* TODO: 
+(* TODO:
    - Introduced identifiers aren't checked (4.16.5 in the Ice manual)
  *)
 
@@ -87,7 +87,7 @@ let set_directmapping_flags symboltable =
       | `User_mapping (tt',_,_,_) ->
 	  neither_classes_nor_proxies tt'
       | `Named ht' ->
-	  if not (Hashtbl.mem dm_flags ht') then 
+	  if not (Hashtbl.mem dm_flags ht') then
 	    set_dm_flag ht';
 	  !(ht'#directmapping)
       | `Proxy _ | `Object _ ->
@@ -104,8 +104,8 @@ let set_directmapping_flags symboltable =
 	 | `Object _ -> ()
 	 | `Exn _ -> ()
 	 | `Const _ -> ()
-	 | `Type ht -> 
-	     if not (Hashtbl.mem dm_flags ht) then 
+	 | `Type ht ->
+	     if not (Hashtbl.mem dm_flags ht) then
 	       set_dm_flag ht
     )
     symboltable
@@ -132,11 +132,11 @@ let analyze defs =
 
   let user_name meta =
     try
-      let m = 
+      let m =
 	List.find (function `Local_name _ -> true | _ -> false) meta in
       match m with
 	| `Local_name l -> Some l
-	| _ -> assert false 
+	| _ -> assert false
     with
       | Not_found -> None in
 
@@ -161,7 +161,7 @@ let analyze defs =
     let u = ref [] in
     for k = 0 to String.length s - 1 do
       let c = s.[k] in
-      if k=0 || is_uppercase c then 
+      if k=0 || is_uppercase c then
 	u := (String.lowercase (String.make 1 c)) :: !u
     done;
     String.concat "" (List.rev !u) in
@@ -195,8 +195,8 @@ let analyze defs =
     let p =
       try
 	let d =
-	  List.find 
-	    (function `Local_structprefix _ -> true | _ -> false) 
+	  List.find
+	    (function `Local_structprefix _ -> true | _ -> false)
 	    meta in
 	match d with
 	  | `Local_structprefix p -> p
@@ -222,7 +222,7 @@ let analyze defs =
 
   let apply_user_mapping meta ty loc =
     try
-      let mapping = 
+      let mapping =
 	List.find (function `Local_mapping _ -> true | _ -> false) meta in
       match mapping with
 	| `Local_mapping name ->
@@ -252,7 +252,7 @@ let analyze defs =
     let ty' = apply_user_mapping meta ty loc in
     match ty' with
       | `User_mapping _ -> true
-      | _ -> false 
+      | _ -> false
   in
 
   let rec lookup (`Absolute container) (name : AST.name) =
@@ -307,39 +307,39 @@ let analyze defs =
       | `String -> `String
       | `Void -> `Void
       | `Name n ->
-	  ( try 
+	  ( try
 	      let hobj = lookup (`Absolute container) n in
 	      match hobj with
 		| `Type ht ->
 		    if ht#local && not local then
-		      raise(Other_error(loc, "Cannot use local type here: " ^ 
+		      raise(Other_error(loc, "Cannot use local type here: " ^
 					  colon_name ht#name));
 		    `Named ht
 		| `Object ho ->
 		    if ho#local && not local then
-		      raise(Other_error(loc, "Cannot use local type here: " ^ 
+		      raise(Other_error(loc, "Cannot use local type here: " ^
 					  colon_name ho#name));
 		    `Object (ho#name)
 		| _ ->
 		    raise(Other_error(loc,
-				      "This is not a type name: " ^ 
+				      "This is not a type name: " ^
 					colon_name n))
 	    with
 	      | Not_found ->
 		  raise(Other_error(loc, "Type not found: " ^  colon_name n))
 	  )
       | `Proxy n ->
-	  ( try 
+	  ( try
 	      let hobj = lookup (`Absolute container) n in
 	      match hobj with
 		| `Object ho ->
 		    if ho#local && not local then
-		      raise(Other_error(loc, "Cannot use local type here: " ^ 
+		      raise(Other_error(loc, "Cannot use local type here: " ^
 					  colon_name ho#name));
 		    `Proxy (ho#name)
 		| _ ->
 		    raise(Other_error(loc,
-				      "This is not an interface name: " ^ 
+				      "This is not an interface name: " ^
 					colon_name n))
 	    with
 	      | Not_found ->
@@ -349,11 +349,11 @@ let analyze defs =
 
   let rec type_contains_classes (tt:ty) =
     match tt with
-      | `Object _ -> 
+      | `Object _ ->
 	  true
-      | `Named ht -> 
+      | `Named ht ->
 	  type_contains_classes ht#term
-      | `Struct(elems, _) -> 
+      | `Struct(elems, _) ->
 	  exists_in_array (fun (_,_,tt',_) -> type_contains_classes tt') elems
       | `Struct_tuple elems ->
 	  exists_in_array (fun (_,tt') -> type_contains_classes tt') elems
@@ -363,9 +363,9 @@ let analyze defs =
 	  type_contains_classes tt1 || type_contains_classes tt2
       | `User_mapping(tt',_,_,_) ->
 	  type_contains_classes tt'
-      | `Void | `Bool | `Byte | `Short | `Int | `Int32 | `Long 
-      | `Float | `Double | `String | `Byteseq | `Enum _ | `Proxy _ -> 
-	  false 
+      | `Void | `Bool | `Byte | `Short | `Int | `Int32 | `Long
+      | `Float | `Double | `String | `Byteseq | `Enum _ | `Proxy _ ->
+	  false
   in
 
   let hfunction_of_ast (`Absolute container) scope local op =
@@ -383,9 +383,9 @@ let analyze defs =
     let out_params =
       List.filter (fun p -> p#out) op#params in
     let in_args =
-      List.map 
-	(fun p -> 
-	   let tt = 
+      List.map
+	(fun p ->
+	   let tt =
 	     ty_of_ast (`Absolute container) scope p#typ local p#meta p#loc in
 	   novoid tt p#loc;
 	   let mn =
@@ -395,9 +395,9 @@ let analyze defs =
 	   (p#name, mn, tt))
 	in_params in
     let out_args =
-      List.map 
-	(fun p -> 
-	   let tt = 
+      List.map
+	(fun p ->
+	   let tt =
 	     ty_of_ast (`Absolute container) scope p#typ local p#meta p#loc in
 	   novoid tt p#loc;
 	   let mn =
@@ -422,15 +422,15 @@ let analyze defs =
 	     match lookup (`Absolute container) n with
 	       | `Exn he ->
 		   if not local && he#local then
-		     raise(Other_error(op#loc, "Exception must not be local: " ^ 
+		     raise(Other_error(op#loc, "Exception must not be local: " ^
 					 colon_name n));
 		   he
 	       | _ ->
-		   raise(Other_error(op#loc, "This is not an exception: " ^ 
+		   raise(Other_error(op#loc, "This is not an exception: " ^
 				       colon_name n))
 	   with
 	     | Not_found ->
-		 raise(Other_error(op#loc, "Exception not found: " ^ 
+		 raise(Other_error(op#loc, "Exception not found: " ^
 				     colon_name n))
 	)
 	op#throws in
@@ -444,7 +444,7 @@ let analyze defs =
       (object
 	 method name = op#name
 	 method mapped_name = mn
-	 method mode = 
+	 method mode =
 	   if op#idempotent then
 	     `Idempotent
 	   else if List.mem `Nonmutating op#meta then
@@ -513,7 +513,7 @@ let analyze defs =
       try
 	let hobj = lookup (`Absolute modname) super_n in
 	match hobj with
-	  | `Object ho -> 
+	  | `Object ho ->
 	      if ho#objtype <> `Class then
 		raise(Other_error(cd#loc, "Class does not extend a class: " ^ colon_name super_n));
 	      if not ho#defflag then
@@ -524,7 +524,7 @@ let analyze defs =
 	  | _ -> raise Not_found
       with
 	| Not_found ->
-	    raise(Other_error(cd#loc, "Super class not found: " ^ 
+	    raise(Other_error(cd#loc, "Super class not found: " ^
 				colon_name super_n)) in
     let super_members = tagged_members super in
     let intfs =
@@ -533,7 +533,7 @@ let analyze defs =
 	   ( try
 	       let hobj = lookup (`Absolute modname) n in
 		match hobj with
-		  | `Object ho -> 
+		  | `Object ho ->
 		      (* objtype=`Class is ok here *)
 		      if not ho#defflag then
 			raise(Other_error(cd#loc, "Interface is not yet defined: " ^ colon_name n));
@@ -543,8 +543,8 @@ let analyze defs =
 		  | _ -> raise Not_found
 	     with
 	       | Not_found ->
-		    raise(Other_error(cd#loc, "Interface not found: " ^ 
-					colon_name n)) 
+		    raise(Other_error(cd#loc, "Interface not found: " ^
+					colon_name n))
 	   )
 	)
 	term#implements in
@@ -565,7 +565,7 @@ let analyze defs =
 	 uniquecheck dm#name scope dm#loc;
 	 if CiHashtbl.mem all_class_symbols dm#name then
 	   raise(Other_error(dm#loc, "This class member is already defined"));
-	 let tt = 
+	 let tt =
 	   ty_of_ast (`Absolute modname) scope dm#typ cd#local dm#meta dm#loc in
 	 novoid tt dm#loc;
 	 CiHashtbl.replace all_class_symbols dm#name (`Data tt);
@@ -575,7 +575,7 @@ let analyze defs =
     List.iter
       (fun op ->
 	 uniquecheck op#name scope op#loc;
-	 let scope' = 
+	 let scope' =
 	   { scope with idents = CiSet.add op#name scope.idents } in
 	 if CiHashtbl.mem all_class_symbols op#name then
 	   raise(Other_error(op#loc, "This class member is already defined"));
@@ -595,7 +595,7 @@ let analyze defs =
 		  if hi <> hi' then
 		    raise(Other_error(cd#loc, "'implements': Operation is inherited twice from different interfaces: " ^ hf#name));
 		with
-		  | Not_found -> 
+		  | Not_found ->
 		      CiHashtbl.add optable hf#name hi
 	      );
 	      ( try
@@ -603,7 +603,7 @@ let analyze defs =
 		  match mem with
 		    | `Data _ ->
 			raise(Other_error(cd#loc, "Member is already defined as data member, but expected to be an operation: " ^ hf#name))
-			  
+
 		    | `Op hf' ->
 			raise(Other_error(cd#loc, "Member already occurs in interfaces mentioned in 'implements'"))
 		with
@@ -645,7 +645,7 @@ let analyze defs =
   let process_intf (`Absolute modname) scope id term =
     let def_super =
       if id#local then
-	`Absolute [ "Ice"; "LocalObject" ] 
+	`Absolute [ "Ice"; "LocalObject" ]
       else
 	`Absolute [ "Ice"; "Object" ] in
     let super_list =
@@ -664,9 +664,9 @@ let analyze defs =
 		 | _ -> raise Not_found
 	     with
 	       | Not_found ->
-		   raise(Other_error(id#loc, "Super interface not found: " ^ 
-				       colon_name n)) 
-	   ) 
+		   raise(Other_error(id#loc, "Super interface not found: " ^
+				       colon_name n))
+	   )
 	)
 	(def_super :: term#extends) in
     let optable = CiHashtbl.create 50 in  (* Maps op names to interfaces *)
@@ -679,7 +679,7 @@ let analyze defs =
 		if hi <> hi' then
 		  raise(Other_error(id#loc, "Operation is inherited twice from different interfaces: " ^ hf#name));
 	      with
-		| Not_found -> 
+		| Not_found ->
 		    CiHashtbl.add optable hf#name hi
 	   )
 	   (operations hi)
@@ -712,15 +712,15 @@ let analyze defs =
 	    ( try
 		let hobj = lookup (`Absolute modname) n in
 		match hobj with
-		  | `Exn he -> 
+		  | `Exn he ->
 		      if not he#defflag then
 			raise(Other_error(ed#loc, "Super exception is not yet defined: " ^ colon_name n));
 		      Some he
 		  | _ -> raise Not_found
 	      with
 		| Not_found ->
-		    raise(Other_error(ed#loc, "Super exception not found: " ^ 
-					colon_name n)) 
+		    raise(Other_error(ed#loc, "Super exception not found: " ^
+					colon_name n))
 	    ) in
     let super_members =
       match super with
@@ -743,7 +743,7 @@ let analyze defs =
 	 uniquecheck dm#name scope dm#loc;
 	 if CiHashtbl.mem all_exn_symbols dm#name then
 	   raise(Other_error(dm#loc, "This exception member is already defined"));
-	 let tt = 
+	 let tt =
 	   ty_of_ast (`Absolute modname) scope dm#typ ed#local dm#meta dm#loc in
 	 novoid tt dm#loc;
 	 CiHashtbl.replace all_exn_symbols dm#name tt;
@@ -775,7 +775,7 @@ let analyze defs =
 	 uniquecheck dm#name scope dm#loc;
 	 if CiHashtbl.mem struct_symbols dm#name then
 	   raise(Other_error(dm#loc, "This struct member is already defined"));
-	 let tt = 
+	 let tt =
 	   ty_of_ast (`Absolute modname) scope dm#typ sd#local dm#meta dm#loc in
 	 novoid tt dm#loc;
 	 CiHashtbl.replace struct_symbols dm#name tt;
@@ -795,7 +795,7 @@ let analyze defs =
 		   false
 		 else
 		   scope.recfield_type = `Mutable in
-	     (dm#name, 
+	     (dm#name,
 	      ( match user_name dm#meta with
 		  | None -> p ^ "_" ^ dm#name
 		  | Some u -> u
@@ -855,17 +855,17 @@ let analyze defs =
       | (`Float x, `Double) -> `Float x
       | (`String x, `String) -> `String x
       | (`Bool x, `Bool) -> `Bool x
-      | (`Name n, _) -> 
+      | (`Name n, _) ->
 	  ( try
 	      let c = lookup (`Absolute modname) n in
 	      match c with
 		| `Const (_,_,v') -> v'
 		| _ ->
-		    raise(Other_error(loc, "Not a constant: " ^ 
+		    raise(Other_error(loc, "Not a constant: " ^
 					colon_name n))
 	    with
 	      | Not_found ->
-		    raise(Other_error(loc, "Constant not found: " ^ 
+		    raise(Other_error(loc, "Constant not found: " ^
 					colon_name n))
 	  )
       | (_, _) ->
@@ -904,7 +904,7 @@ let analyze defs =
 	  let scope' =
 	    { scope with idents = CiSet.add nmstr scope.idents } in
 	  process_defs (`Absolute name) scope' (Some hm) md#term
-	  
+
       | `Class cd ->
 	  nontoplevelcheck parent_opt cd#loc;
 	  let nmstr = cd#name in
@@ -948,7 +948,7 @@ let analyze defs =
 	    ) in
 	  CiHashtbl.replace symboltable absname (`Object hc_pre);
 	  (* Store class: *)
-	  let scope' = 
+	  let scope' =
 	    { scope with idents = CiSet.add nmstr scope.idents } in
 	  let hc =
 	    let (super, super_intf, data_elements, op_elements) =
@@ -1016,7 +1016,7 @@ let analyze defs =
 	    ) in
 	  CiHashtbl.replace symboltable absname (`Object hi_pre);
 	  (* Store interface: *)
-	  let scope' = 
+	  let scope' =
 	    { scope with idents = CiSet.add nmstr scope.idents } in
 	  let hi =
 	    let (super, elements) =
@@ -1062,7 +1062,7 @@ let analyze defs =
 	      | Not_found -> ()
 	  );
 	  (* Store exception: *)
-	  let scope' = 
+	  let scope' =
 	    { scope with idents = CiSet.add nmstr scope.idents } in
 	  let he =
 	    let (super, elements) =
@@ -1110,12 +1110,12 @@ let analyze defs =
 	      | Not_found -> ()
 	  );
 	  (* Store type: *)
-	  let scope' = 
+	  let scope' =
 	    { scope with idents = CiSet.add nmstr scope.idents } in
 	  let mapped = map_name parent_opt sd#meta nmstr in
 	  let eq_opt =
 	    try
-	      let eq = 
+	      let eq =
 		List.find (function `Local_equals _ -> true|_->false) sd#meta in
 	      match eq with
 		| `Local_equals t -> Some t
@@ -1125,11 +1125,11 @@ let analyze defs =
 	    let elements =
 	      match sd#term with
 		| None -> [| |]
-		| Some t -> 
+		| Some t ->
 		    process_struct (`Absolute modname) nmstr scope' sd t
 	    in
 	    let use_tuples =
-	      List.mem `Local_tuple sd#meta || 
+	      List.mem `Local_tuple sd#meta ||
 		have_user_mapping sd#meta (`Struct (elements, eq_opt)) sd#loc in
 	    let tt =
 	      if use_tuples then
@@ -1158,7 +1158,7 @@ let analyze defs =
 	  let absname = colon_name (`Absolute name) in
 	  checknewtype absname sd#loc;
 	  (* Store type: *)
-	  let arg_tt = 
+	  let arg_tt =
 	    ty_of_ast
 	      (`Absolute modname) scope sd#arg_typ sd#local sd#arg_meta sd#loc in
 	  novoid arg_tt sd#loc;
@@ -1192,15 +1192,15 @@ let analyze defs =
 	  checknewtype absname sd#loc;
 
 	  (* Store type: *)
-	  let arg1_tt = 
+	  let arg1_tt =
 	    ty_of_ast (`Absolute modname) scope sd#arg_typ1 sd#local
 	      sd#arg_meta1 sd#loc in
-	  let arg2_tt = 
+	  let arg2_tt =
 	    ty_of_ast (`Absolute modname) scope sd#arg_typ2 sd#local
 	      sd#arg_meta2 sd#loc in
 	  novoid arg1_tt sd#loc;
 	  novoid arg2_tt sd#loc;
-	  let tt = 
+	  let tt =
 	    `Dictionary(arg1_tt, arg2_tt) in
 	  let tt = apply_user_mapping sd#meta tt sd#loc in
 	  let mapped = map_name parent_opt sd#meta nmstr in
@@ -1232,7 +1232,7 @@ let analyze defs =
 	  (* CHECK: Create a constant for every enumerated value? *)
 
 	  (* Store type: *)
-	  let tt = 
+	  let tt =
 	    `Enum (Array.of_list sd#term) in
 	  let tt = apply_user_mapping sd#meta tt sd#loc in
 	  let mapped = map_name parent_opt sd#meta nmstr in
@@ -1267,13 +1267,13 @@ let analyze defs =
 	    with
 	      | Not_found -> ()
 	  );
-	  let v = 
+	  let v =
 	    const_value
 	      (`Absolute modname) scope cd#arg_value cd#arg_typ cd#meta
 	      cd#loc in
 	  let mname =
 	    map_name parent_opt cd#meta nmstr in
-	  CiHashtbl.replace 
+	  CiHashtbl.replace
 	    symboltable absname (`Const (`Absolute name, mname, v))
 
       | `GMeta md ->
@@ -1304,7 +1304,7 @@ let analyze defs =
 		  | `Nonmutating | `Other _ ->
 		      ()
 		  | d ->
-		      raise(Noloc_error("Not allowed in global context: " ^ 
+		      raise(Noloc_error("Not allowed in global context: " ^
 					  Hgen_parser_util.print_meta_def d))
 	       )
 	       md
@@ -1336,7 +1336,7 @@ let analyze defs =
 	  method objtype = `Class
 	  method super = None
 	  method super_intf = []
-	  method data_elements = 
+	  method data_elements =
 	    [| |] (* This is intentionally wrong! *)
 	  method op_elements = []
 	  method local = false

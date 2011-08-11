@@ -41,7 +41,7 @@ val extract_spec : 't proxy_port -> Hydro_types.proxy_spec
 val extract_name : 't proxy_port -> 't
 val create_port : 't -> Hydro_types.proxy_spec -> 't proxy_port
 
-class type ['response] call_susp = 
+class type ['response] call_susp =
 object
   method scall : 'response
   method acall : ('response -> unit) -> unit
@@ -53,11 +53,11 @@ end
 class call_susp_def acall mapresponse =
 object
   val cp = Hydro_client.call_params()
-  method scall = 
+  method scall =
     acall cp (fun f -> ...); Unixqueue.run esys; ...
   method acall f =
     acall cp f
-  method with_params cp' = 
+  method with_params cp' =
     < cp = cp' >
 end
 
@@ -109,7 +109,7 @@ module Flat_types : sig
   class type r_sample_Intf_extractSomething =
   object
     method hydro_response : Hydro_client.response  (* low-level *)
-    method result : t_sample_StringSeq 
+    method result : t_sample_StringSeq
     method out_d : t_sample_StringDict             (* out param *)
   end
 
@@ -128,7 +128,7 @@ module Flat_types : sig
   class type p_sample_Intf =
   object
     inherit Hydro_proxy.proxy_t
-    method extractNames : 
+    method extractNames :
              t_sample_StructureSeq -> r_sample_Intf_extractNames call_susp
     method getColor :
              unit -> r_sample_Intf_getColor call_susp
@@ -172,7 +172,7 @@ contains additionally:
 
 - call results:
 
-  val r_sample_Intf_extractNames : 
+  val r_sample_Intf_extractNames :
         Hydro_client.response -> r_sample_Intf_extractNames
 
 
@@ -190,7 +190,7 @@ let intf : hintf =
   (object
      method name = "::Sample::Intf"
      method super = None
-     method elements = [ ( object 
+     method elements = [ ( object
                              method name = "extractNames"
                              method in_args = [| "s", ... |]
                              method in_classes = false
@@ -221,10 +221,10 @@ file_clnt.mli:
 
 module Flat_view : sig
   (* prefix c_ = client *)
-  class c_sample_Intf : Hydro_proxy.env_t -> 
+  class c_sample_Intf : Hydro_proxy.env_t ->
                         File_types.Flat_view.t_sample_Intf ->
                         File_types.Flat_view.p_sample_Intf
-  val new_sample_Intf : Hydro_proxy.env_t -> 
+  val new_sample_Intf : Hydro_proxy.env_t ->
                         Hydro_proxy.extended_proxy_spec ->
                         File_types.Flat_view.p_sample_Intf
     (* CHECK: Call this "unchecked_cast" ? *)
@@ -275,7 +275,7 @@ val spec_as_sample_Intf_unchecked : Hydro_proxy.extended_proxy_spec ->
   as_sample_Intf : 't proxy_port -> File_types.Flat_view.t_sample_Intf
 
   that performs a checked cast
-  
+
 ----------------------------------------------------------------------
 
 A proxy could be create manually as in:

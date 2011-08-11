@@ -13,7 +13,7 @@ val marshal : system -> htype -> bool -> value -> Netbuffer.t -> int -> unit
      supposed to be of type [ht] and appends the string to [nb].
      The [class_flag] must be true if [ht] contains classes.
      Logically, an encapsulation is created, but the encapsulation
-     header is not written. [e] is the minor encoding version. 
+     header is not written. [e] is the minor encoding version.
      (The major encoding version is always 1.)
    *)
 
@@ -21,13 +21,13 @@ val marshal_exn : system -> hexn -> sliced_value -> Netbuffer.t -> int -> unit
   (** [marshal_exn sys hx val nb e]: Encodes the exception value [val] which is
      supposed to be of (static) exn type [hx] and appends the string to [nb].
      Logically, an encapsulation is created, but the encapsulation
-     header is not written. [e] is the minor encoding version. 
+     header is not written. [e] is the minor encoding version.
      (The major encoding version is always 1.)
    *)
 
-val marshal_msg : system -> compression_status -> msg -> int -> int -> 
+val marshal_msg : system -> compression_status -> msg -> int -> int ->
        msg_buffer
-  (** [marshal_msg sys zstat msg p e]: 
+  (** [marshal_msg sys zstat msg p e]:
      Returns a message buffer (header and bodies) for a message.
      [p] is the minor protocol version. [e] is the minor encoding version
      (which must have been used for all encapsulations). (The major version
@@ -57,11 +57,11 @@ val print_size : Netbuffer.t -> int -> unit
 val print_string : Netbuffer.t -> string -> unit
   (** Various printers *)
 
-val marshal_sequence : 
+val marshal_sequence :
        (Netbuffer.t -> 'a -> unit) -> Netbuffer.t -> 'a array -> unit
 val marshal_dictionary :
-        (Netbuffer.t -> 'a -> unit) -> 
-        (Netbuffer.t -> 'b -> unit) -> 
+        (Netbuffer.t -> 'a -> unit) ->
+        (Netbuffer.t -> 'b -> unit) ->
         Netbuffer.t -> ('a * 'b) array -> unit
 val marshal_enum : int (* size of enum *) -> Netbuffer.t -> int -> unit
 

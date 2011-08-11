@@ -16,8 +16,8 @@ val create_cache : port:int -> period:int -> unit -> cache
 exception No_result of string
   (** An error prevented the check from being done *)
 
-val check_object : cache:cache -> 
-                   monobj:string -> 
+val check_object : cache:cache ->
+                   monobj:string ->
                    operation:string ->
                    idempotent:bool ->
                    unit ->
@@ -30,9 +30,9 @@ val check_object : cache:cache ->
       are not supported by [check_object].
    *)
 
-val configure_proxy : cache:cache -> 
-                      proxy:Hydro_proxy.proxy_t -> 
-                      operation:string -> 
+val configure_proxy : cache:cache ->
+                      proxy:Hydro_proxy.proxy_t ->
+                      operation:string ->
                       idempotent:bool ->
                       ?threshold:int ->
                       ?deactivate:bool ->
@@ -41,13 +41,13 @@ val configure_proxy : cache:cache ->
   (** Configures the proxy such that the liveliness of the server port is
       checked before every call. The string is the name of the operation
       to be used for pinging.
-     
+
       [threshold]: After this number of failed pings the server is considered
       as being down. Default: 1
 
       [deactivate]: If the server is not reachable, the server port is marked
       as dead in the pool object. Note that this
-      also affects other proxies 
+      also affects other proxies
       that share this pool even if the other proxies are not configured for
       using Hydromon. Default: false
    *)

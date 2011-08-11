@@ -96,13 +96,13 @@ let endpoint_of_toks toks =
 	let host =
 	  if host = "*" then "0.0.0.0" else host in
 	let port =
-	  try int_of_string(Hashtbl.find opts "-p") 
-	  with 
+	  try int_of_string(Hashtbl.find opts "-p")
+	  with
 	    | Not_found -> 0
 	    | _ -> failwith "illegal port expression" in
 	let timeout =
-	  try Int32.of_string(Hashtbl.find opts "-t") 
-	  with 
+	  try Int32.of_string(Hashtbl.find opts "-t")
+	  with
 	    | Not_found -> (-1l)
 	    | _ -> failwith "illegal timeout expression" in
 	let compress =
@@ -157,9 +157,9 @@ let endpoints_of_string s =
 
 
 let proxy_addr_of_toks toks =
-  let id, toks1 = 
+  let id, toks1 =
     identity_of_toks toks in
-  let opts, toks2 = 
+  let opts, toks2 =
     options_of_toks toks1 ["-f"] ["-t";"-o";"-O";"-d";"-D";"-s"] in
   let have_t = Hashtbl.mem opts "-t" in
   let have_o = Hashtbl.mem opts "-o" in
@@ -203,7 +203,7 @@ let proxy_addr_of_toks toks =
 	  if ep_list <> [] then
 	    failwith "An adapter is incompatible with direct endpoints";
 	  `Adapter adapter in
-  ( object 
+  ( object
       method id = id
       method facet = facet
       method mode = mode
@@ -224,7 +224,7 @@ let proxy_addr_of_string s =
 	failwith ("proxy_addr_of_string: " ^ msg)
 
 
-let esc_re = 
+let esc_re =
   Pcre.regexp "[/\\x5c\\x00-\\x1f\\x7f-\\xff]"
 
 let escape enable_slash s =

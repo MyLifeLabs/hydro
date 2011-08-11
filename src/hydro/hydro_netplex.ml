@@ -1,7 +1,7 @@
 open Netplex_types
 
 (* Semaphore implementation: This impl. is quite problematic, but the best
-   we can do without explicit Netplex support. Once Netplex implements 
+   we can do without explicit Netplex support. Once Netplex implements
    semaphores itself, we should better use that
 
    Problem: When containers crash, the semaphore isn't decreased
@@ -47,7 +47,7 @@ object(self)
     flush f_out;
     Unix.close fd;   (* also releases lock *)
     n
-      
+
   method incr = self#modify succ
   method decr = self#modify pred
 
@@ -56,7 +56,7 @@ end
 
 
 
-let hydro_factory 
+let hydro_factory
       ~configure
       ?(adapters = 0)
       ?(hooks = fun _ _ -> new Netplex_kit.empty_processor_hooks())
@@ -107,12 +107,12 @@ let hydro_factory
 		| "<ping>" ->
 		    `Ping
 		| "<sockaddr_or_ping>" ->
-		    `Sockaddr_or_ping 
+		    `Sockaddr_or_ping
 		| _ ->
 		    `String str
 	    )
 	  with
-	    | Not_found -> `Sockaddr_or_ping 
+	    | Not_found -> `Sockaddr_or_ping
 	    | _ -> failwith("Cannot parse " ^ cf#print addr ^
 			      ".register_hostname") in
 
@@ -145,17 +145,17 @@ let hydro_factory
 
 	let sem = new semaphore in
 
-	let params = 
-	  Hydro_params.update_server_params 
+	let params =
+	  Hydro_params.update_server_params
 	    ?trans_timeout server_params in
-	
+
 	( object(self)
 	    inherit Netplex_kit.processor_base (hooks aa custom_cfg) as super
 
 	    method pre_start_hook socksrv ctrl contid =
 	      if reg <> None then
 		sem # init socksrv ctrl;
-	      super # pre_start_hook socksrv ctrl contid 
+	      super # pre_start_hook socksrv ctrl contid
 
 	    method post_start_hook cont =
 	      ( match reg with
@@ -168,7 +168,7 @@ let hydro_factory
 			(* Restriction: only first file descr is registered *)
 			let fd = (snd (List.hd socksrv#sockets)).(0) in
 			let addr = Unix.getsockname fd in
-			let ep = 
+			let ep =
 			  Hydro_connector.tcp_endpoint_of_file_descr
 			    addr params#trans_timeout false in
 			let host, dynamic_ip =
@@ -216,11 +216,11 @@ let hydro_factory
 		!srv_list;
 	      srv_list := [];
 	      super # shutdown()
-		
+
 
 	    method process ~when_done container fd proto =
 	      let esys = container # event_system in
-	      let descr = 
+	      let descr =
 		Hydro_connector.descriptor fd false `Stream in
 
 	      let onabort srv =
@@ -250,7 +250,7 @@ let hydro_factory
 	      List.iter (Hydro_endpoint.Server.bind_adapter srv) od_lst;
 	      setup container srv aa custom_cfg
 
-	    method supported_ptypes = 
+	    method supported_ptypes =
 	      supported_ptypes
 
 	  end

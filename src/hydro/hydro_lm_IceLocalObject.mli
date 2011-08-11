@@ -8,7 +8,7 @@ end
 
 class type oi_Ice_LocalObject =
 object
-  method hydro_invoke_operation : 
+  method hydro_invoke_operation :
     string -> Hydro_types.value array -> Hydro_types.session -> unit
   method hydro_effective_id :
     string
@@ -26,8 +26,8 @@ class delegate_oi_Ice_LocalObject : #oi_Ice_LocalObject -> oi_Ice_LocalObject
 
 class mk_od_Ice_LocalObject : unit -> od_Ice_LocalObject
 
-val dispatch_Ice_LocalObject : 
-  oi_Ice_LocalObject -> string -> Hydro_types.value array -> 
+val dispatch_Ice_LocalObject :
+  oi_Ice_LocalObject -> string -> Hydro_types.value array ->
   Hydro_types.session ->
   unit
 

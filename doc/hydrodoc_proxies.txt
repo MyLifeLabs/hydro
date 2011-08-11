@@ -2,7 +2,7 @@
 
 Let's assume we have a simple Slice interface M.ice:
 
-{[ 
+{[
    module Sample {
      interface F {
        int add(int x, int y);
@@ -85,7 +85,7 @@ Alternatively, one can also specify the address in a string notation
 
 {[
   let addr =
-    Hydro_string.proxy_addr_of_string 
+    Hydro_string.proxy_addr_of_string
       "Adder -t : tcp -h worker -p 4711 -t 60000"
 ]}
 
@@ -225,7 +225,7 @@ this allows you (1) to modify call parameters like timeouts, and
 
 We do a synchronous call:
 
-{[ 
+{[
   let r = (po # add 42l 16l) # scall
 ]}
 

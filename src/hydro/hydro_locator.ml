@@ -27,7 +27,7 @@ let proxy_resolver ?domain_resolver cp pr_loc =
 		pc_Ice_Locator env' pr_loc in
 	      let id =
 		eps#id in
-	      (po # findObjectById id) 
+	      (po # findObjectById id)
 		# acall (self#process_reply emit env)
 	  | `Adapter adapter_id ->
 	      let env' =
@@ -45,19 +45,19 @@ let proxy_resolver ?domain_resolver cp pr_loc =
 	      | None -> (* TODO *)
 		  failwith "Inactive object/adapter" in
 	  let eps' =
-	    (Hydro_lm.Unsafe.unwrap_proxy found_pr :> 
+	    (Hydro_lm.Unsafe.unwrap_proxy found_pr :>
 	       Hydro_proxy.extended_proxy_addr ) in
 	  base_resolver # resolve eps' emit env
 	with
-	  | Hydro_builtin.User_exception ue 
+	  | Hydro_builtin.User_exception ue
 	      when ue#hydro_ops#is_Ice_AdapterNotFoundException ->
 	        emit (lazy [])
-	  | Hydro_builtin.User_exception ue 
+	  | Hydro_builtin.User_exception ue
 	      when ue#hydro_ops#is_Ice_ObjectNotFoundException ->
 	        emit (lazy [])
-	  | err -> 
+	  | err ->
 	        emit (lazy (raise err))
-	      
+
     end : Hydro_proxy.proxy_resolver_t
   )
 
@@ -72,10 +72,10 @@ let test_indirect_resolver (res : Hydro_proxy.proxy_resolver_t) name =
 	method mode = `Twoway
 	method secure = false
 	method parameters = `Adapter name
-      end 
+      end
     ) in
   let result = ref None in
-  let emit_result r = 
+  let emit_result r =
     result := Some r in
 
   let pool = Hydro_proxy.pool() in
@@ -106,10 +106,10 @@ let get_Ice_Locator_of_port host port =
   let addr =
     ( object
 	method id =
-	  ( object 
+	  ( object
 	      method name = "Locator"
-	      method category = "IceGrid" 
-	    end 
+	      method category = "IceGrid"
+	    end
 	  )
 	method facet = None
 	method mode = `Twoway
@@ -160,7 +160,7 @@ let set_adapter ~dynamic_ip pr_loc adapterId replicaGroupId_opt ep_opt =
 	  raise(Error "Locator doesn't return LocatorRegistry")
       | Some pr_reg ->
 	  let po_reg = pc_Ice_LocatorRegistry env pr_reg in
-	  let pr_dummy_opt = 
+	  let pr_dummy_opt =
 	    match ep_opt with
 	      | Some ep ->
 		  let ep' =
@@ -178,13 +178,13 @@ let set_adapter ~dynamic_ip pr_loc adapterId replicaGroupId_opt ep_opt =
 		  (* Create a dummy proxy reference: *)
 		  let id =
 		    ( object
-			method name = "dummy" 
+			method name = "dummy"
 			method category = ""
-		      end 
+		      end
 		    ) in
-		  let pa = 
+		  let pa =
 		    ( object
-			method id = id 
+			method id = id
 			method facet = None
 			method mode = `Twoway
 			method secure = false
@@ -192,7 +192,7 @@ let set_adapter ~dynamic_ip pr_loc adapterId replicaGroupId_opt ep_opt =
 		      end
 		    ) in
 		  Some(Hydro_lm.pr_of_address pa)
-	      | None -> 
+	      | None ->
 		  None in
 	  let f =
 	    match replicaGroupId_opt with
@@ -210,7 +210,7 @@ let set_adapter ~dynamic_ip pr_loc adapterId replicaGroupId_opt ep_opt =
 	      | error ->
 		  raise(Error(Hydro_util.exn_to_string error))
 	  )
-	
+
   with
     | error ->
 	pool # abort();
@@ -230,7 +230,7 @@ let set_adapters ~dynamic_ip pr_loc l ep_opt =
      *)
 
 
-let register_adapter ?(dynamic_ip=false) 
+let register_adapter ?(dynamic_ip=false)
                      pr_loc adapterId replicaGroupId_opt ep =
   set_adapter ~dynamic_ip pr_loc adapterId replicaGroupId_opt (Some ep)
 

@@ -56,10 +56,10 @@ let main() =
       | Some cmd ->
           let options =
             String.concat " " (List.map Filename.quote !cpp_options) in
-          let f = 
+          let f =
 	    Unix.open_process_in (cmd ^ " " ^ options ^ " " ^ !filename) in
 	  let to_close = ref true in
-	  (f, (fun () -> 
+	  (f, (fun () ->
 		 if !to_close then (
 		   let status = Unix.close_process_in f in
 		   to_close := false;
@@ -79,9 +79,9 @@ let main() =
 
     if !p_symtable then
       Hgen_util.TS_util.print_symboltable symtab;
-    
+
     let pad = Hgen_trans_il.to_il symtab in
-    
+
     if !view then (
       let fmt = Format.std_formatter in
       print_string "(**********************************************************************)\n";
@@ -97,7 +97,7 @@ let main() =
       let basename = Filename.chop_extension !filename in
       let mliname = basename ^ ".mli" in
       let mli = open_out mliname in
-      onerror := 
+      onerror :=
 	(fun () -> close_out mli; Sys.remove mliname) ::
 	  !onerror;
       initial_comment mli !filename;
@@ -105,10 +105,10 @@ let main() =
       Hgen_print_il.print_pad_sig mli_fmt pad;
       Format.pp_print_flush mli_fmt ();
       close_out mli;
-      
+
       let mlname = basename ^ ".ml" in
       let ml = open_out mlname in
-      onerror := 
+      onerror :=
 	(fun () -> close_out ml; Sys.remove mlname) ::
 	  !onerror;
       initial_comment ml !filename;

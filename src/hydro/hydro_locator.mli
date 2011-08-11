@@ -2,13 +2,13 @@
 
 open Hydro_builtin
 
-val proxy_resolver : 
+val proxy_resolver :
        ?domain_resolver:Hydro_proxy.domain_resolver ->
-      Hydro_types.client_params -> 
+      Hydro_types.client_params ->
       pr_Ice_Locator ->
         Hydro_proxy.proxy_resolver_t
-  (** A proxy_resolver that also supports indirect lookups through a 
-      locator service like icegridnode. The parameters and the 
+  (** A proxy_resolver that also supports indirect lookups through a
+      locator service like icegridnode. The parameters and the
       proxy of the locator have to be passed.
 
       Note that there is no caching of results!
@@ -27,13 +27,13 @@ val get_Ice_Locator_of_string : string -> pr_Ice_Locator
 exception Error of string
 
 val register_adapter : ?dynamic_ip:bool ->
-                       pr_Ice_Locator -> 
+                       pr_Ice_Locator ->
                        string ->
-                       string option -> 
-                       Hydro_types.endpoint -> 
+                       string option ->
+                       Hydro_types.endpoint ->
                          unit
   (** [register_adapter loc adapterId replicaGroupId ep]: Register the endpoint
-      [ep] as adapter with name [adapterId] and the optional 
+      [ep] as adapter with name [adapterId] and the optional
       [replicaGroupId] in the locator service.
 
       This function makes only synchronous calls, and uses a private
@@ -52,7 +52,7 @@ val register_adapter : ?dynamic_ip:bool ->
 val register_adapters : ?dynamic_ip:bool ->
                         pr_Ice_Locator ->
                         Hydro_types.object_dispatcher list ->
-                        Hydro_types.endpoint -> 
+                        Hydro_types.endpoint ->
                          unit
   (** [register_adapters loc l ep]: Registers all adapters in [l] for the
       endpoint [ep] in the locator service [loc].
@@ -63,28 +63,28 @@ val register_adapters : ?dynamic_ip:bool ->
    *)
 
 
-val unregister_adapter :  pr_Ice_Locator -> 
+val unregister_adapter :  pr_Ice_Locator ->
                           string ->
-                          string option -> 
+                          string option ->
                             unit
   (** [unregister_adapter loc adapterId replicaGroupId]: Remove the registration
-      entry for the adapter called [adapterId]  and the optional 
+      entry for the adapter called [adapterId]  and the optional
       [replicaGroupId] from the locator service.
 
       See also [register_adapter].
-   *)   
+   *)
 
 val unregister_adapters : pr_Ice_Locator ->
                           Hydro_types.object_dispatcher list ->
                              unit
-  (** [unregister_adapters loc l]: Remove the registeration of all adapters 
+  (** [unregister_adapters loc l]: Remove the registeration of all adapters
       in [l] for the from the locator service [loc].
    *)
 
 
 
-val test_indirect_resolver : Hydro_proxy.proxy_resolver_t -> string -> 
-                               (Hydro_types.endpoint * 
+val test_indirect_resolver : Hydro_proxy.proxy_resolver_t -> string ->
+                               (Hydro_types.endpoint *
 				  Hydro_types.network_port option) list
  (* Returns endpoint and port for an indirect proxy string *)
 

@@ -1,13 +1,13 @@
-start: 
+start:
   definitions
 
-global_meta_data: 
+global_meta_data:
   ICE_GLOBAL_METADATA_OPEN string_list ICE_GLOBAL_METADATA_CLOSE
 
-meta_data: 
+meta_data:
   ICE_METADATA_OPEN string_list ICE_METADATA_CLOSE
 
-definitions: 
+definitions:
   global_meta_data definitions
 | meta_data definition ';' definitions
 

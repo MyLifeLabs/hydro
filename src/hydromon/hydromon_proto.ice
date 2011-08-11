@@ -5,8 +5,8 @@ module Hydro {
      */
 
     exception Error { string msg; };
-    /* Some error occurred */ 
-    
+    /* Some error occurred */
+
     struct monitoredObject {
 	Ice::Object *monobject;    /* The object being monitored */
 	string       operation;    /* This operation is used to ping the object */
@@ -58,7 +58,7 @@ module Hydro {
 	    list()
 	    throws Error;
 	/* Lists all current monitorings */
-	
+
     };
 
 };

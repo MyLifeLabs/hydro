@@ -1,7 +1,7 @@
 open Hydromon_proto
 open Printf
 
-type key = 
+type key =
     { host : Unix.inet_addr;
       port : int;
       id_name : string;
@@ -67,14 +67,14 @@ let key_of_addr addr operation idempotent =
     try
       List.find
 	(function `TCP _ -> true | _ -> false)
-	(Array.to_list epa) 
+	(Array.to_list epa)
     with Not_found -> failwith "No TCP address found" in
   let (host,port) =
     match tcp_ep with
       | `TCP ep -> ep#host, ep#port
       | _ -> assert false in
   let host_ip =
-    try Unix.inet_addr_of_string host 
+    try Unix.inet_addr_of_string host
     with _ -> failwith "Host must be given as IP address" in
   let key =
     { host = host_ip;
@@ -88,5 +88,5 @@ let key_of_addr addr operation idempotent =
 
 
 let key_of_pr pr operation idempotent =
-  key_of_addr (Hydro_lm.Unsafe.unwrap_proxy pr) operation idempotent 
+  key_of_addr (Hydro_lm.Unsafe.unwrap_proxy pr) operation idempotent
 

@@ -56,7 +56,7 @@ and ep_state =
 and call =
       { msg : call_msg;
 	hf : hfunction;
-	
+
 	(* Params: *)
         destination : Unix.sockaddr option;
 	msg_timeout : float;
@@ -64,7 +64,7 @@ and call =
 	(* When a msg timer is running, this is [Some g], and by clearing g
            the timer is stopped prematurely
          *)
-	
+
         pass_response : client_response -> unit;
 
         mutable state : call_state;
@@ -95,7 +95,7 @@ and ep =
       mutable server_enabled : bool;
       (* Endpoints can be clients, servers, or clients & servers at once! *)
 
-      
+
       (* State only used for clients: *)
 
       mutable wait_queue : call Queue.t;    (* Calls not yet sent *)
@@ -185,12 +185,12 @@ let max_enc_minor ep trans =
 	      | None -> 0  (* conservative default *)
 	      | Some em -> em
 	  )
-	    
+
 let max_enc_minor_nt ep =
   match ep.trans with
     | Some trans -> max_enc_minor ep trans
     | None -> 0
-	(* so we can call this function if we don't have a connection 
+	(* so we can call this function if we don't have a connection
            right now
 	 *)
 
@@ -198,7 +198,7 @@ let max_enc_minor_nt ep =
 let addr_of_ep ep =
   match ep.trans with
     | None -> None
-    | Some md -> 
+    | Some md ->
 	( match md # ctrl # getsockname with
 	    | `Implied -> None
 	    | `Sockaddr s -> Some s
@@ -264,7 +264,7 @@ let pass_call_condition ep call cc connect_flag =
     match cc with
       | (`Message_timeout | `Transport_timeout) when connect_flag ->
 	  `Connect_timeout
-      | `Error x when connect_flag -> 
+      | `Error x when connect_flag ->
 	  `Connect_error x
       | `Message_lost _ ->
 	  `Message_lost (not connect_flag && call.state <> Waiting)
@@ -297,11 +297,11 @@ let pass_call_condition_to_all ep cc connect_flag =
   Queue.transfer ep.wait_queue waiting;
   ep.wait_map <- SessionMap.empty;
 
-  SessionMap.iter 
-    (fun _ call -> pass_call_condition ep call cc connect_flag) 
+  SessionMap.iter
+    (fun _ call -> pass_call_condition ep call cc connect_flag)
     pending;
   Queue.iter
-    (fun call -> pass_call_condition ep call cc connect_flag) 
+    (fun call -> pass_call_condition ep call cc connect_flag)
     waiting
 
   (*****)
@@ -332,11 +332,11 @@ let cancel_idle_timeout ep =
 	Unixqueue.clear ep.esys g;
 	ep.idle_timeout_group <- None
 
-	  
+
 let stop_shutdown_timer ep =
   match ep.shutdown_timeout_group with
     | None -> ()
-    | Some g -> 
+    | Some g ->
 	Unixqueue.clear ep.esys g;
 	ep.shutdown_timeout_group <- None
 
@@ -360,7 +360,7 @@ let abort_with cc_opt ep =
 
 	| Connecting e ->
 	    e#abort()
-	      
+
 	| Validating | Closing1 | Closing2 | Closing3 | Up ->
 	    ( match ep.trans with
 		| None -> () (* strange *)
@@ -368,7 +368,7 @@ let abort_with cc_opt ep =
 		    c # shutdown();
 		    ep.trans <- None
 	    )
-	      
+
 	| Init ->
 	    ()
     );
@@ -378,7 +378,7 @@ let abort_with cc_opt ep =
       match cc_opt with
 	| Some cc -> cc
 	| None -> `Message_lost false in  (* arg updated later *)
-    if was_up then 
+    if was_up then
       tell_pool ep;
     ep.onabort ep;   (* Server *)
     Queue.clear ep.srv_response_queue;
@@ -390,7 +390,7 @@ let abort_with cc_opt ep =
 
 let queued_requests ep =
   match ep.ep_state with
-    | Down -> 
+    | Down ->
 	0
     | _ ->
 	let n_pending =
@@ -412,7 +412,7 @@ let endpoint_id ep =
 
 let start_shutdown_timer ep =
   if ep.client_enabled && (client_params ep)#msg_timeout >= 0.0 then (
-    (* If there is a msg_timeout this is also the upper bound for the 
+    (* If there is a msg_timeout this is also the upper bound for the
        shutdown process. Note that a trans_timeout also applies because
        it is still set on the transporter.
      *)
@@ -450,7 +450,7 @@ let shutdown ?(ondown=(fun()->())) ep =
 		  ep.ep_state <- Closing1;
 		  tell_pool ep;
 		  !check_for_output ep
-		) else 
+		) else
 		  (* Close message isn't supported for datagrams: *)
 		  abort_with None ep
 	)
@@ -469,7 +469,7 @@ let shutdown ?(ondown=(fun()->())) ep =
     | Down ->
 	(* mostly ignore *)
 	invoke_by_esys ondown ()
-	
+
 
 let shutdown_when_idle ep =
   match ep.ep_state with
@@ -496,7 +496,7 @@ let when_idle ep =
       if tmo > 0.0 then (
 	let g = Unixqueue.new_group ep.esys in
 	Unixqueue.once ep.esys g tmo
-	  (fun () -> 
+	  (fun () ->
 	     ep.idle_timeout_group <- None;
 	     shutdown ep
 	  );
@@ -553,7 +553,7 @@ let rec new_xid ep =
   let xid = ep.next_xid in
   ep.next_xid <- Int32.succ xid;
   if (xid = 0l ||     (* 0 is reserved for oneway calls *)
-      SessionMap.mem xid ep.wait_map || 
+      SessionMap.mem xid ep.wait_map ||
       SessionMap.mem xid ep.pending)
   then
     new_xid ep
@@ -599,7 +599,7 @@ let create_request facet ep id hf op call_params in_args xid =
     match call_params#context with
       | None -> [| |]
       | Some ctx -> Array.of_list ctx in
-  let msg = 
+  let msg =
     ( object
 	method request_id = xid
 	method id = id
@@ -615,7 +615,7 @@ let create_request facet ep id hf op call_params in_args xid =
 	    TStruct hf#in_args in
 	  let cflag =
 	    hf # in_classes in
-	  let b = 
+	  let b =
 	    Netbuffer.create 500 in
 	  Hydro_marshal.marshal ep.sys in_type cflag (VStruct in_args) b em;
 	  { encap_buf = b;
@@ -660,7 +660,7 @@ let decode_reply ep call reply peer_opt =
 	    | VStruct [| VStruct out_vals;
 			 resval;
 		      |] ->
-		( object 
+		( object
 		    method condition = `Success
 		    method out_args = out_vals
 		    method result = resval
@@ -687,7 +687,7 @@ let decode_reply ep call reply peer_opt =
 	    method client = Some ep
 	  end
 	)
-	
+
     | ( `Object_does_not_exist _
       | `Facet_does_not_exist _
       | `Operation_does_not_exist _
@@ -695,7 +695,7 @@ let decode_reply ep call reply peer_opt =
       | `Unknown_user_exception _
       | `Unknown_exception _ as cc
       ) ->
-	( object 
+	( object
 	    method condition = (cc :> client_response_condition)
 	    method out_args = [| |]
 	    method result = raise(Client_condition cc)
@@ -763,7 +763,7 @@ let create_result_encap ep hf res_val out_vals =
 	    |] in
   let cflag =
     hf # out_classes in
-  let b = 
+  let b =
     Netbuffer.create 500 in
   Hydro_marshal.marshal ep.sys out_type cflag out_val b em;
   { encap_buf = b;
@@ -776,7 +776,7 @@ let create_result_encap ep hf res_val out_vals =
 let create_uexn_encap ep hx sv =
   let em =
     min Hydro_marshal.max_enc_minor (max_enc_minor_nt ep) in
-  let b = 
+  let b =
     Netbuffer.create 500 in
   Hydro_marshal.marshal_exn ep.sys hx sv b em;
   { encap_buf = b;
@@ -819,7 +819,7 @@ let create_session ep req_id ctx hf =
       method emit_user_exception sv =
 	let push_flag = (!response = None) in
 	let ty_id = sv#hydro_effective_id in
-	let hx_opt = 
+	let hx_opt =
 	  try Some(CiHashtbl.find ep.sys#exceptions ty_id)
 	  with Not_found -> None in
 	( match hx_opt with
@@ -878,8 +878,8 @@ let direct_reply ep req_id res =
 let rec search_op intf lc_opname =
   (* CHECK: represent [elements] better/hashtbl*)
   try
-    List.find 
-      (fun hf -> 
+    List.find
+      (fun hf ->
 	 String.lowercase (hf # name) = lc_opname)
       intf#elements
   with
@@ -895,7 +895,7 @@ and search_op_list intf_list lc_opname =
 	with Not_found -> search_op_list intf_list' lc_opname
 
 
-      
+
 let process_incoming_request ep req =
   (* This is for servers only *)
   (* Look into all adapters... *)
@@ -918,13 +918,13 @@ let process_incoming_request ep req =
   in
 
   let obj_opt =
-    try Some(search_object ep.adapters) 
+    try Some(search_object ep.adapters)
     with Not_found -> None in
 
   match obj_opt with
     | None ->
 	(* We have to send an error response *)
-	direct_reply 
+	direct_reply
 	  ep req_id (`Object_does_not_exist(id,facet,opname))
     | Some obj ->
 	let fct_opt =
@@ -933,11 +933,11 @@ let process_incoming_request ep req =
 	( match fct_opt with
 	    | None ->
 		(* We have to send an error response *)
-		direct_reply 
+		direct_reply
 		  ep req_id (`Facet_does_not_exist(id,facet,opname))
 	    | Some fct ->
 		let type_id = fct # hydro_effective_id in
-		let intf = 
+		let intf =
 		  try CiHashtbl.find ep.sys#interfaces type_id
 		  with Not_found -> assert false  (* CHECK//shouldn't happen here *)in
 		let lc_opname = String.lowercase opname in
@@ -947,33 +947,33 @@ let process_incoming_request ep req =
 		( match opr_opt with
 		    | None ->
 			(* We have to send an error response *)
-			direct_reply 
+			direct_reply
 			  ep req_id (`Operation_does_not_exist(id,facet,opname))
 		    | Some opr ->
-			let hf = 
+			let hf =
 			  try search_op intf lc_opname
 			  with Not_found -> assert false (* CHECK *)
 			in
 			(* Check whether mode is right: *)
 			if hf#mode = `Normal && mode <> `Normal then
-			  direct_reply 
-			    ep req_id 
+			  direct_reply
+			    ep req_id
 			    (`Unknown_exception
 			       ("Operation is not declared as idempotent but invoked as idempotent or nonmutating: " ^ opname))
 			else
 			  if hf#mode <> `Normal && mode = `Normal then
-			    direct_reply 
-			      ep req_id 
+			    direct_reply
+			      ep req_id
 			      (`Unknown_exception
 				 ("Operation is declared as idempotent but neither invoked as idempotent nor nonmutating: " ^ opname))
 			  else (
 			    let session = create_session ep req_id ctx hf in
-			    let in_vals = 
+			    let in_vals =
 			      decode_params ep req#params hf in
 			    opr in_vals session
 			  )
 		)
-	)		
+	)
 
 
 let process_incoming_message ep hdr nb peer_opt =
@@ -988,12 +988,12 @@ let process_incoming_message ep hdr nb peer_opt =
 	} in
       let msg = Hydro_unmarshal.unmarshal_msg ep.sys hdr eb in
       (* checks version in hdr *)
-      
+
       ( match msg with
-	  | `Reply reply -> 
+	  | `Reply reply ->
 	      if dlog_enabled() then
 		dlog "Hydro_endpoint: Got reply";
-	      if not ep.client_enabled then 
+	      if not ep.client_enabled then
 		raise(Protocol_violation `BadMessageType);
 	      let xid = reply#request_id in
 	      let call_opt =
@@ -1002,27 +1002,27 @@ let process_incoming_message ep hdr nb peer_opt =
 	      ( match call_opt with
 		  | Some call ->
 		      assert(call.state = Pending);
-		      let response = 
+		      let response =
 			decode_reply ep call reply peer_opt in
 		      remove_call ep call;
 		      (fun () -> pass_call_response ep call response)
-		    
+
 		  | None ->
 		      (* This could be a timed-out reply. Simply ignore! *)
 		      (fun () -> ())
 	      )
-		
+
 	  | `Validate_connection ->
 	      if dlog_enabled() then
 		dlog "Hydro_endpoint: Got Validate_connection";
-	      if not ep.client_enabled then 
+	      if not ep.client_enabled then
 		raise(Protocol_violation `BadMessageType);
 	      ( match ep.ep_state with
 		  | Validating ->
 		      ep.ep_state <- Up;
 		      ep.max_proto_minor <- hdr#proto_minor;
 		      ep.max_enc_minor <- hdr#enc_minor;
-		  | Up -> 
+		  | Up ->
 		      ()
 		  | _ ->
 		      assert false
@@ -1035,13 +1035,13 @@ let process_incoming_message ep hdr nb peer_opt =
 	      let was_up = is_up ep in
 	      ( match ep.ep_state with
 		  | Validating
-		  | Up 
+		  | Up
 		  | Closing1 ->
 		      let f =
 		       match ep.trans with
 			  | None -> assert false
 			  | Some trans ->
-			      if trans#ctrl#transport_protocol_type = `Stream 
+			      if trans#ctrl#transport_protocol_type = `Stream
 			      then (
 				ep.ep_state <- Closing2;
 				(fun () -> !check_for_output ep)
@@ -1050,7 +1050,7 @@ let process_incoming_message ep hdr nb peer_opt =
 				(* Close message is ignored for datagrams *) in
 		      if was_up then tell_pool ep;
 		      f
-		  | Closing2 | Closing3 -> 
+		  | Closing2 | Closing3 ->
 		    (fun () -> ())
 		  | _ ->
 		      assert false
@@ -1059,7 +1059,7 @@ let process_incoming_message ep hdr nb peer_opt =
 	  | `Request req ->
 	      if dlog_enabled() then
 		dlog "Hydro_endpoint: Got request";
-	      if not ep.server_enabled then 
+	      if not ep.server_enabled then
 		raise(Protocol_violation `BadMessageType);
 	      (fun () -> process_incoming_request ep req)
 		(* Note: exceptions in [process_incoming_request] are not
@@ -1088,7 +1088,7 @@ let rec handle_incoming_message ep r =
   match r with
     | `Error err ->
 	if dlog_enabled() then
-	  dlogf "Hydro_endpoint: message reading exn: %s" 
+	  dlogf "Hydro_endpoint: message reading exn: %s"
 	    (Hydro_util.exn_to_string err);
 	abort_with (Some (`Error err)) ep
 	  (* CHECK Servers: unclear whether we want to let the exception fall
@@ -1100,7 +1100,7 @@ let rec handle_incoming_message ep r =
 	  dlog "Hydro_endpoint: Message arrived";
 	let peer_opt =
 	  match peer_addr with
-	    | `Implied -> None 
+	    | `Implied -> None
 	    | `Sockaddr a -> Some a in
 	let prev_state = ep.ep_state in
 	process_incoming_message ep hdr nb peer_opt;  (* may fail!!! *)
@@ -1162,7 +1162,7 @@ let rec handle_outgoing_message ep r =
   match r with
     | `Error err ->
 	if dlog_enabled() then
-	  dlogf "Hydro_endpoint: message writing exn: %s" 
+	  dlogf "Hydro_endpoint: message writing exn: %s"
 	    (Hydro_util.exn_to_string err);
 	abort_with (Some (`Error err)) ep
 	  (* CHECK Servers: unclear whether we want to let the exception fall
@@ -1210,8 +1210,8 @@ and next_outgoing_srv_response ep trans =
 	  match resp.session # response with
 	    | None -> assert false
 	    | Some msg -> msg in
-	let mb = 
-	  Hydro_marshal.marshal_msg 
+	let mb =
+	  Hydro_marshal.marshal_msg
 	    ep.sys `Compression_unsupported  (`Reply msg) pm em in
 	let dest = trans#ctrl#getpeername in
 	if dlog_enabled() then
@@ -1248,8 +1248,8 @@ and next_outgoing_call ep trans =
 	  min Hydro_marshal.max_proto_minor (max_proto_minor ep trans) in
 	let em =
 	  min Hydro_marshal.max_enc_minor (max_enc_minor ep trans) in
-	let mb = 
-	  Hydro_marshal.marshal_msg 
+	let mb =
+	  Hydro_marshal.marshal_msg
 	    ep.sys `Compression_unsupported  (call.msg :> msg) pm em in
 	let dest =
 	  match call.destination with
@@ -1268,8 +1268,8 @@ and next_outgoing_call ep trans =
 	(* The call was cancelled before issued! *)
 	if dlog_enabled() then
 	  dlog "Hydro_endpoint: found cancelled call"
-	    
-    | None -> 
+
+    | None ->
 	()
 
 and send_close_msg ep trans =
@@ -1277,7 +1277,7 @@ and send_close_msg ep trans =
     min Hydro_marshal.max_proto_minor (max_proto_minor ep trans) in
   let em =
     min Hydro_marshal.max_enc_minor (max_enc_minor ep trans) in
-  let mb = 
+  let mb =
     Hydro_marshal.marshal_msg ep.sys `Compression_unsupported `Close_connection pm em in
   let dest = trans#ctrl#getpeername in
   if dlog_enabled() then
@@ -1379,17 +1379,17 @@ let create_client sys conn esys =
 
 	 let ce = tp # client_connect_engine conn esys in
 	 cl.ep_state <- Connecting ce;
-	 
+
 	 (* Now somebody might have configured the client for a trans_timeout: *)
 	 if (client_params cl)#trans_timeout >= 0.0 then (
 	   Unixqueue.once esys cg (client_params cl)#trans_timeout
-	     (fun () -> 
+	     (fun () ->
 		abort_with
 		  (Some `Connect_timeout)
 		  cl
 	     )
 	 );
-	 
+
 	 Uq_engines.when_state
 	   ~is_done:(fun c ->
 		       if dlog_enabled() then
@@ -1401,8 +1401,8 @@ let create_client sys conn esys =
 			     if (client_params cl)#trans_timeout >= 0.0 then (
 			       if dlog_enabled() then
 				 dlog "Hydro_endpoint: setting trans_timeout";
-			       c # ctrl # set_timeout 
-				 ~notify:(fun () -> 
+			       c # ctrl # set_timeout
+				 ~notify:(fun () ->
 					    abort_with (Some `Transport_timeout) cl
 					 )
 				 (client_params cl)#trans_timeout;
@@ -1416,7 +1416,7 @@ let create_client sys conn esys =
 				     !check_for_input cl;
 				     !check_for_output cl
 			     )
-			 | Down -> 
+			 | Down ->
 			     ()  (* strange *)
 			 | _ ->
 			     assert false
@@ -1444,7 +1444,7 @@ let configure_client cl params =
 let pool_connect cl f =
   if cl.pool_callback <> None then
     failwith "Hydro_endpoint.pool_connect: already pool member";
-  cl.pool_callback <- Some f  
+  cl.pool_callback <- Some f
 
 
   (*****)
@@ -1476,7 +1476,7 @@ let create_server ?(onabort = fun _ -> ()) sys ept fd sp esys =
 
 		       if (server_params srv)#trans_timeout >= 0.0 then (
 			 conn # ctrl # set_timeout
-			   ~notify:(fun () -> 
+			   ~notify:(fun () ->
 				      abort_with
 					(Some `Transport_timeout) srv
 				   )
@@ -1493,7 +1493,7 @@ let create_server ?(onabort = fun _ -> ()) sys ept fd sp esys =
 			 Hydro_marshal.max_enc_minor in
 		       srv.max_proto_minor <- pm;
 		       srv.max_enc_minor <- em;
-		       let mb = 
+		       let mb =
 			 Hydro_marshal.marshal_msg srv.sys
 			   `Compression_unsupported
 			   `Validate_connection pm em in
@@ -1501,11 +1501,11 @@ let create_server ?(onabort = fun _ -> ()) sys ept fd sp esys =
 		       if dlog_enabled() then
 			 dlog "Hydro_endpoint: start_writing validate_connection msg";
 		       conn # ctrl # start_writing
-			 ~when_done:(fun r -> 
+			 ~when_done:(fun r ->
 				       match r with
 					 | `Error err ->
 					     abort_with (Some (`Error err)) srv
-					       
+
 					 | `Ok () ->
 					     if dlog_enabled() then
 					       dlog "Hydro_endpoint: validate_connection msg writing finished";
@@ -1618,7 +1618,7 @@ module Master = struct
     in
 
     let start_server descr =
-      let srv = 
+      let srv =
 	Server.create ~onabort sys ept descr params esys in
       List.iter
 	(fun oa -> Server.bind_adapter srv oa)
@@ -1656,7 +1656,7 @@ module Master = struct
 			 let ep = tp # server_endpoint master_descr params in
 			 msrv.epname <- Some ep;
 			 msrv.cr_eng <- None;
-			 
+
 			 if master_descr#is_master then (
 			   (* Accept connections in a loop: *)
 			   msrv.mdescr <- Some master_descr;

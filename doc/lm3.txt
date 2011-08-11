@@ -3,7 +3,7 @@ Language Mapping 3: Exceptions
 **********************************************************************
 
 module Sample {
-  
+
   exception Exn {
     string text;
     code int;
@@ -30,7 +30,7 @@ module Flat_view : sig
   type exception_name =
     [ `XSampleExn | `XSampleSubExn1 | `XSampleSubExn2 ]
 
-  class type any_exception = 
+  class type any_exception =
     object
       method hydro_exn_name : exception_name
       method hydro_exn_id : string   (* String of hydro_exn_name *)
@@ -45,8 +45,8 @@ module Flat_view : sig
   class type t_sample_Exn =
     object
       inherit any_exception
-      method text : string; 
-      method code : int 
+      method text : string;
+      method code : int
     end
 
   class type t_sample_SubExn1 =
@@ -148,7 +148,7 @@ let decode_sample_SubExn1 sv =
 
 let decode_exception sv =
   match sv#hydro_effective_id with
-    | "::Sample::Exn" -> 
+    | "::Sample::Exn" ->
          let (value1, sv1) = decode_sample_Exn sv in
          new x_sample_Exn value1
     | "::Sample::SubExn1" ->

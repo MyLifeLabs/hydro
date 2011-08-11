@@ -11,7 +11,7 @@ module Unsafe = struct
     match x with
       | None -> VNull
       | Some pr -> VProxy pr
-	  
+
   let to_proxy_reference v =
     match v with
       | VProxy pr -> Some pr
@@ -44,7 +44,7 @@ end
 
 exception ExitEventHandling
 
-class ['response] call_suspension 
+class ['response] call_suspension
       twoway_call (map : Hydro_endpoint.Client.response -> 'response)  esys
     : ['response] call_suspension_t =
 object(self)
@@ -54,7 +54,7 @@ object(self)
     let value = ref None in
     let active = ref true in
     self # acall
-      (fun v -> 
+      (fun v ->
 	 (* Got the response. First remember the result value... *)
 	 value := Some v;
 	 (* ...then enforce that we leave the Unixqueue. This stops any
@@ -62,9 +62,9 @@ object(self)
             against idle connections
           *)
 	 let g = Unixqueue.new_group esys in
-	 Unixqueue.once esys g 0.0 (fun () -> 
+	 Unixqueue.once esys g 0.0 (fun () ->
 				      if !active then raise ExitEventHandling);
-      ); 
+      );
     ( try
 	Unixqueue.run esys
       with
@@ -87,7 +87,7 @@ object(self)
   method params = cp
 
   method with_params cp' =
-    ( {< cp = cp' >} : 
+    ( {< cp = cp' >} :
 	'response #call_suspension_t :> 'response call_suspension_t )
 end
 

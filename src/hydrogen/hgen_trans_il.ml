@@ -82,9 +82,9 @@ let rec translate_tt symboltable (tt : TS.ty) =
     | `Byteseq -> `String
     | `Enum tags -> `Variant tags
     | `Struct(stru,eq_opt) ->
-	`Record 
+	`Record
 	  (Array.map
-	     (fun (_, mapped_n, tt', is_mutable) -> 
+	     (fun (_, mapped_n, tt', is_mutable) ->
 		(mapped_n, translate_tt symboltable tt', is_mutable))
 	     stru,
 	   eq_opt
@@ -94,7 +94,7 @@ let rec translate_tt symboltable (tt : TS.ty) =
 	  (Array.to_list
 	     (Array.map (fun (_, tt') -> translate_tt symboltable tt') stru))
     | `Sequence tt' -> `Array (translate_tt symboltable tt')
-    | `Dictionary (tt1,tt2) -> 
+    | `Dictionary (tt1,tt2) ->
 	`Alist(translate_tt symboltable tt1, translate_tt symboltable  tt2)
     | `Proxy name ->
 	let n = Hgen_util.TS_util.colon_name name in
@@ -145,7 +145,7 @@ let e_array_to_list e =
   `CallF("Array.to_list", [e])
 
 let e_map_array_pairs (v1, v2, e1, e2) =
-  `CallF("Array.map", 
+  `CallF("Array.map",
 	 [ `Fun2(v1,v2,e1);
 	   e2
 	 ])
@@ -155,17 +155,17 @@ let match1_maybe_dm ht (e1,p,e2,xn) =
     `Match1_DM(e1,p,e2,xn)
   else
     `Match1(e1,p,e2)
-  
+
 
 let um_id (expr : expr_term) = expr
 
-let rec generate_marshalling_to 
-            symboltable 
-            (ht_opt : TS.hnamed option) 
+let rec generate_marshalling_to
+            symboltable
+            (ht_opt : TS.hnamed option)
 	    (um_trans : expr_term -> expr_term)
-            (tt : TS.ty)  
+            (tt : TS.ty)
          : (expr_term * type_term) =
-  let get_ht() = 
+  let get_ht() =
     match ht_opt with
       | None -> assert false
       | Some ht -> ht in
@@ -175,13 +175,13 @@ let rec generate_marshalling_to
 	( um_trans (`Fun(v1, `Var "()")),
 	  `Fun(`Value, `Unit)
 	)
-    | `Bool -> 
+    | `Bool ->
 	let v1 = new_evar() in
 	let v2 = new_evar() in
 	( (`Fun(v1, `Match1(`Evar v1, `Bool v2, um_trans(`Evar v2)))),
 	  `Fun(`Value, `Bool)
 	)
-    | `Byte -> 
+    | `Byte ->
 	let v1 = new_evar() in
 	let v2 = new_evar() in
 	( (`Fun(v1, `Match1(`Evar v1, `Byte v2, um_trans(`Evar v2)))),
@@ -242,7 +242,7 @@ let rec generate_marshalling_to
 	( ( `Fun(v1, `Match1(`Evar v1,
 			     `Enum v2,
 			     um_trans
-			       (`Array_get(`Var ("e_" ^ ht#mapped_name), 
+			       (`Array_get(`Var ("e_" ^ ht#mapped_name),
 					`Evar v2)))) : expr_term),
 	  `Fun(`Value, `Named("t_" ^ ht#mapped_name))
 	)
@@ -250,7 +250,7 @@ let rec generate_marshalling_to
 	let v1 = new_evar() in
 	let v2 = new_evar() in
 	let ht = get_ht() in
-	( ( `Fun(v1, 
+	( ( `Fun(v1,
 		 match1_maybe_dm
 		   ht
 		   (`Evar v1,
@@ -259,7 +259,7 @@ let rec generate_marshalling_to
 		      (`Record_lit
 			 (Array.mapi
 			    (fun k (_,mn,tt',_) ->
-			       (mn, 
+			       (mn,
 				`Call(fst(generate_marshalling_to_ref
 					    symboltable tt'),
 				      [ `Array_get(`Evar v2,
@@ -276,7 +276,7 @@ let rec generate_marshalling_to
 	let v1 = new_evar() in
 	let v2 = new_evar() in
 	let ht = get_ht() in
-	( ( `Fun(v1, 
+	( ( `Fun(v1,
 		 match1_maybe_dm
 		   ht
 		   (`Evar v1,
@@ -298,11 +298,11 @@ let rec generate_marshalling_to
 		   )) : expr_term),
 	  `Fun(`Value, `Named("t_" ^ ht#mapped_name))
 	)
-    | `Sequence tt' -> 
+    | `Sequence tt' ->
 	let v1 = new_evar() in
 	let v2 = new_evar() in
 	let ht = get_ht() in
-	( ( `Fun(v1, 
+	( ( `Fun(v1,
 		 match1_maybe_dm
 		   ht
 		   (`Evar v1,
@@ -317,7 +317,7 @@ let rec generate_marshalling_to
 		   )) : expr_term),
 	  `Fun(`Value, `Named("t_" ^ ht#mapped_name))
 	)
-    | `Dictionary (tt1,tt2) -> 
+    | `Dictionary (tt1,tt2) ->
 	let v1 = new_evar() in
 	let v2 = new_evar() in
 	let v3 = new_evar() in
@@ -326,13 +326,13 @@ let rec generate_marshalling_to
 	( ( `Fun(v1,
 		 match1_maybe_dm
 		   ht
-		   (`Evar v1, 
+		   (`Evar v1,
 		    `Dictionary v2,
 		    um_trans
 		      (e_array_to_list
 			 (e_map_array_pairs
-			    (v3, 
-			     v4, 
+			    (v3,
+			     v4,
 			     `Pair(`Call(fst(generate_marshalling_to_ref
 					       symboltable tt1),
 					 [`Evar v3]),
@@ -381,10 +381,10 @@ let rec generate_marshalling_to
 			      `Var "None")) : expr_term),
 	  `Fun(`Value, `Option(`Named("or_" ^ ht#mapped_name)))
 	)
-	
+
     | `Named ht' ->
-	let sign = 
-	  snd(generate_marshalling_to symboltable 
+	let sign =
+	  snd(generate_marshalling_to symboltable
 		(Some (ht' :> TS.hnamed)) um_id ht'#term) in
 	( `Var ("to_" ^ ht'#mapped_name),  (* CHECK: Ok to ignore um_trans *)
 	  sign
@@ -400,7 +400,7 @@ let rec generate_marshalling_to
 	)
 
 
-and generate_marshalling_to_ref symboltable (tt : TS.ty)  
+and generate_marshalling_to_ref symboltable (tt : TS.ty)
          : (expr_term * type_term) =
   (* This is for referring to already defined types *)
   match tt with
@@ -414,7 +414,7 @@ and generate_marshalling_to_ref symboltable (tt : TS.ty)
     | `Float
     | `Double
     | `String
-    | `Byteseq 
+    | `Byteseq
     | `Named _ ->
 	(* ht is not needed for these: *)
 	generate_marshalling_to symboltable None um_id tt
@@ -423,7 +423,7 @@ and generate_marshalling_to_ref symboltable (tt : TS.ty)
     | `Struct(_,_)
     | `Struct_tuple _
     | `Sequence _
-    | `Dictionary _ 
+    | `Dictionary _
     | `User_mapping _ ->
 	(* these type terms are not allowed as reference *)
 	assert false
@@ -449,9 +449,9 @@ and generate_marshalling_to_ref symboltable (tt : TS.ty)
 
 
 let rec generate_marshalling_of
-           symboltable (ht_opt : TS.hnamed option) (tt : TS.ty)  
+           symboltable (ht_opt : TS.hnamed option) (tt : TS.ty)
          : (expr_term * type_term) =
-  let get_ht() = 
+  let get_ht() =
     match ht_opt with
       | None -> assert false
       | Some ht -> ht in
@@ -461,12 +461,12 @@ let rec generate_marshalling_of
 	( ( `Fun(v1, `Var "VNothing") : expr_term),
 	  `Fun(`Unit, `Value)
 	)
-    | `Bool -> 
+    | `Bool ->
 	let v1 = new_evar() in
 	( ( `Fun(v1, `CallC("VBool", [`Evar v1])) : expr_term),
 	  `Fun(`Bool, `Value)
 	)
-    | `Byte -> 
+    | `Byte ->
 	let v1 = new_evar() in
 	( ( `Fun(v1, `CallC("VByte", [`Evar v1])) : expr_term),
 	  `Fun(`Int, `Value)
@@ -515,7 +515,7 @@ let rec generate_marshalling_of
 	let v1 = new_evar() in
 	let v2 = new_evar() in
 	let ht = get_ht() in
-	( ( `Fun(v1, 
+	( ( `Fun(v1,
 		 `Call(`Fun(v2, `CallC("VEnum", [`Evar v2])),
 		       [ `Match_variants(`Evar v1,
 					 Array.to_list
@@ -533,7 +533,7 @@ let rec generate_marshalling_of
 	let v1 = new_evar() in
 	let v2 = new_evar() in
 	let ht = get_ht() in
-	( ( `Fun(v1, 
+	( ( `Fun(v1,
 		 `Call(`Fun(v2, `CallC("VStruct", [`Evar v2])),
 		       [ `Array_lit
 			   ( Array.mapi
@@ -553,7 +553,7 @@ let rec generate_marshalling_of
 	let v2 = new_evar() in
 	let ht = get_ht() in
 	let fields = Array.map (fun (_,tt') -> (new_evar()), tt') stru in
-	( ( `Fun(v1, 
+	( ( `Fun(v1,
 		 `Call(`Fun(v2, `CallC("VStruct", [`Evar v2])),
 		       [ `Match_tuple(`Evar v1,
 				      (List.map fst (Array.to_list fields)),
@@ -569,11 +569,11 @@ let rec generate_marshalling_of
 		) : expr_term ),
 	  `Fun(`Named("t_" ^ ht#mapped_name), `Value)
 	)
-    | `Sequence tt' -> 
+    | `Sequence tt' ->
 	let v1 = new_evar() in
 	let v2 = new_evar() in
 	let ht = get_ht() in
-	( ( `Fun(v1, 
+	( ( `Fun(v1,
 		 `Call(`Fun(v2, `CallC("VSequence", [`Evar v2])),
 		       [ `CallF("Array.map",
 				[ fst(generate_marshalling_of_ref symboltable tt');
@@ -584,13 +584,13 @@ let rec generate_marshalling_of
 		) : expr_term),
 	  `Fun(`Named("t_" ^ ht#mapped_name), `Value)
 	)
-    | `Dictionary (tt1,tt2) -> 
+    | `Dictionary (tt1,tt2) ->
 	let v1 = new_evar() in
 	let v2 = new_evar() in
 	let v3 = new_evar() in
 	let v4 = new_evar() in
 	let ht = get_ht() in
-	( ( `Fun(v1, 
+	( ( `Fun(v1,
 		 `Call(`Fun(v2, `CallC("VDictionary", [`Evar v2])),
 		       [ `CallF("Array.map",
 				[ `Fun2(v3, v4,
@@ -618,7 +618,7 @@ let rec generate_marshalling_of
 			       v2,
 			       (* Some v2: *)
 			       `Call(
-				 `Fun(v3, 
+				 `Fun(v3,
 				      `CallC("VProxy", [`Evar v3])),
 				 [ `CallF("Hydro_lm.Unsafe.unwrap_proxy",
 					  [ `Evar v2 ])
@@ -653,14 +653,14 @@ let rec generate_marshalling_of
 	)
     | `User_mapping(t1,_,_,f_of) ->
 	let v1 = new_evar() in
-	let t1_of, _ = 
+	let t1_of, _ =
 	  generate_marshalling_of symboltable ht_opt t1 in
 	( `Fun(v1,
 	       `Call(t1_of, [ `CallF(f_of, [ `Evar v1 ]) ] ) ),
 	  `Fun(translate_tt symboltable tt, `Value)
 	)
 
-and generate_marshalling_of_ref symboltable (tt : TS.ty)  
+and generate_marshalling_of_ref symboltable (tt : TS.ty)
          : (expr_term * type_term) =
   (* This is for referring to already defined types *)
   match tt with
@@ -674,7 +674,7 @@ and generate_marshalling_of_ref symboltable (tt : TS.ty)
     | `Float
     | `Double
     | `String
-    | `Byteseq 
+    | `Byteseq
     | `Named _ ->
 	(* ht is not needed for these: *)
 	generate_marshalling_of symboltable None tt
@@ -683,7 +683,7 @@ and generate_marshalling_of_ref symboltable (tt : TS.ty)
     | `Struct(_,_)
     | `Struct_tuple _
     | `Sequence _
-    | `Dictionary _ 
+    | `Dictionary _
     | `User_mapping _ ->
 	(* these type terms are not allowed as reference *)
 	assert false
@@ -771,7 +771,7 @@ let rec ddt_of_type mn_opt (tt : TS.ty) : expr_term =
       | `User_mapping(t1,_,f_to,_) ->
 	  `CallF(f_to,
 		 [ `Call(ddt_of_type None t1, v123) ])
-      | `Proxy _ 
+      | `Proxy _
       | `Object _ ->
 	  assert false
   in
@@ -870,7 +870,7 @@ let rec det_of_type mn_opt (tt : TS.ty) : expr_term =
 	    )
       | `User_mapping(t1,_,_,f_from) ->
 	  `Call(det_of_type None t1, [`Evar v1; `CallF(f_from, [`Evar v2])])
-      | `Proxy _ 
+      | `Proxy _
       | `Object _ ->
 	  assert false
   in
@@ -888,9 +888,9 @@ let deT_of_name mn : expr_term =
 		)
        )
 
-let rec dt_of_type 
+let rec dt_of_type
         (symboltable : TS.entity CiHashtbl.t) (tt : TS.ty) : expr_term =
-  (* Return TS.ty as expression that generates the corresponding 
+  (* Return TS.ty as expression that generates the corresponding
      Hydro_types.htype
    *)
   match tt with
@@ -909,7 +909,7 @@ let rec dt_of_type
     | `Enum e   -> `CallC("TEnum",
 			 [`Array_lit (Array.map (fun s -> `String_lit s) e)])
     | `Struct(s,_) -> `CallC("TStruct",
-			  [`Array_lit 
+			  [`Array_lit
 			     (Array.map
 				(fun (on, mn, tt', _) ->
 				   `Pair(`String_lit on,
@@ -917,7 +917,7 @@ let rec dt_of_type
 				)
 			       s)])
     | `Struct_tuple s -> `CallC("TStruct",
-			  [`Array_lit 
+			  [`Array_lit
 			     (Array.map
 				(fun (on, tt') ->
 				   `Pair(`String_lit on,
@@ -949,7 +949,7 @@ let rec tt_qualifies_for_dm (tt : TS.ty) =
 	tt_qualifies_for_dm tt'
     | _ ->
 	false
-  
+
 
 let type_to_il (symboltable : TS.entity CiHashtbl.t) (pad : pad) ht =
   (* Generate the O'Caml type definition: *)
@@ -958,10 +958,10 @@ let type_to_il (symboltable : TS.entity CiHashtbl.t) (pad : pad) ht =
 
   if not ht#local then (
     (* Generate the marshalling code: *)
-    let (m_to_fun, m_to_sig) = 
-      generate_marshalling_to 
+    let (m_to_fun, m_to_sig) =
+      generate_marshalling_to
 	symboltable (Some (ht :> TS.hnamed)) um_id ht#term in
-    let (m_of_fun, m_of_sig) = 
+    let (m_of_fun, m_of_sig) =
       generate_marshalling_of
 	symboltable (Some (ht :> TS.hnamed)) ht#term in
     pad.letrecs     <- ( "to_" ^ ht#mapped_name, m_to_fun) :: pad.letrecs;
@@ -986,8 +986,8 @@ let type_to_il (symboltable : TS.entity CiHashtbl.t) (pad : pad) ht =
       pad.letrecs <- ( "ddt_" ^ ht#mapped_name,
 		       ddt_of_type (Some ht#mapped_name) ht#term ) ::
 	pad.letrecs;
-      
-      pad.letrecs <- ( "ddT_" ^ ht#mapped_name, 
+
+      pad.letrecs <- ( "ddT_" ^ ht#mapped_name,
 		       ddT_of_name ht#mapped_name ) ::
 	pad.letrecs;
 
@@ -995,7 +995,7 @@ let type_to_il (symboltable : TS.entity CiHashtbl.t) (pad : pad) ht =
 		       det_of_type (Some ht#mapped_name) ht#term ) ::
 	pad.letrecs;
 
-      pad.letrecs <- ( "deT_" ^ ht#mapped_name, 
+      pad.letrecs <- ( "deT_" ^ ht#mapped_name,
 		       deT_of_name ht#mapped_name ) ::
 	pad.letrecs;
 
@@ -1005,9 +1005,9 @@ let type_to_il (symboltable : TS.entity CiHashtbl.t) (pad : pad) ht =
 	(* Don't use DirectMapping for enums here. *)
 	if tt_qualifies_for_dm ht#term then
 	  `CallC("TDirectMapping",
-		 [ `Tuple [ dt_expr0; 
+		 [ `Tuple [ dt_expr0;
 			    `Var("deT_" ^ ht#mapped_name);
-			    `Var("ddT_" ^ ht#mapped_name) 
+			    `Var("ddT_" ^ ht#mapped_name)
 			  ] ])
 	else
 	  dt_expr0 in
@@ -1050,7 +1050,7 @@ let rec is_sub_exn he1 he2 =
 
 
 let exns_to_il symboltable pad local_flag exns =
-  let prefix = 
+  let prefix =
     if local_flag then "local_" else "" in
   pad.types <- (prefix ^ "exception_name",
 		if exns = [] then
@@ -1067,14 +1067,14 @@ let exns_to_il symboltable pad local_flag exns =
 			       (List.map
 				  (fun he ->
 				     [ "is_" ^ he#mapped_name, `Bool;
-				       "as_" ^ he#mapped_name, 
+				       "as_" ^ he#mapped_name,
 				         (`Named ("t_" ^ he#mapped_name))
 				     ]
 				  )
 				  exns))
 			)
 	       ) :: pad.types;
-  
+
   let exn_types =
     List.map
       (fun he ->
@@ -1103,8 +1103,8 @@ let exns_to_il symboltable pad local_flag exns =
       (fun he ->
 	 let slices = all_exn_elements he in
 	 let slices_with_evars =
-	   List.map 
-	     (fun slice -> 
+	   List.map
+	     (fun slice ->
 		List.map (fun (n,mn,ty) -> (n, mn, new_evar(), ty)) slice
 	     )
 	     slices in
@@ -1112,7 +1112,7 @@ let exns_to_il symboltable pad local_flag exns =
 	 let ops_obj =
 	   `Object
 	     ( "ops_self",
-	       [], 
+	       [],
 	       [ "exn_name", `Variant he#mapped_name;
 		 "exn_id", `String_lit (Hgen_util.TS_util.colon_name he#name);
 	       ] @
@@ -1120,17 +1120,17 @@ let exns_to_il symboltable pad local_flag exns =
 		    (List.map
 		       (fun he' ->
 			  if is_sub_exn he he' then
-			    [ "is_" ^ he'#mapped_name, 
+			    [ "is_" ^ he'#mapped_name,
 			        `Var "true";
-			      "as_" ^ he'#mapped_name, 
+			      "as_" ^ he'#mapped_name,
 			        `Coerce("self",
 					(* "t_" ^ he#mapped_name, *) "",
 					"t_" ^ he'#mapped_name)
 			    ]
 			  else
-			    [ "is_" ^ he'#mapped_name, 
+			    [ "is_" ^ he'#mapped_name,
 			        `Var "false";
-			      "as_" ^ he'#mapped_name, 
+			      "as_" ^ he'#mapped_name,
 			        `Raise "Hydro_lm.Invalid_coercion"
 			    ]
 		       )
@@ -1171,7 +1171,7 @@ let exns_to_il symboltable pad local_flag exns =
 		      mk_fun_type sl')
 	 in
 	 let ty = mk_fun_type slices in
-	 let letrec_sig = 
+	 let letrec_sig =
 	   ("x_" ^ he#mapped_name, ty) in
 
 	 (letrec,letrec_sig)
@@ -1189,14 +1189,14 @@ let exns_to_il symboltable pad local_flag exns =
 	   let v1 = new_evar() in
 	   let v2 = new_evar() in
 	   let v3 = new_evar() in
-	   
+
 	   let elements =
 	     List.map
 	       (fun (n, _, ty) -> (n, new_evar(), ty))
 	       (Array.to_list he#data_elements) in
-	   
+
 	   let id = Hgen_util.TS_util.colon_name he#name in
-	   
+
 	   let f =
 	     `Fun(v1,
 		  `Match_list(`Evar v1,
@@ -1219,7 +1219,7 @@ let exns_to_il symboltable pad local_flag exns =
 					  )
 			     )
 		 ) in
-	   
+
 	   ("dx_" ^ he#mapped_name, f)
 	)
 	exns in
@@ -1241,7 +1241,7 @@ let exns_to_il symboltable pad local_flag exns =
 				    hier in
 				let expr1 =
 				  `Call(`Var("x_" ^ he#mapped_name),
-					(List.map 
+					(List.map
 					   (fun (_,v,_) -> `Evar v)
 					   hier1)
 				       ) in
@@ -1292,7 +1292,7 @@ let exns_to_il symboltable pad local_flag exns =
 			    `Array_lit(
 			      Array.map
 				(fun (n,mn,ty) ->
-				   let f,_ = 
+				   let f,_ =
 				     generate_marshalling_of_ref
 				       symboltable ty in
 				   `Call(f,
@@ -1339,10 +1339,10 @@ let exns_to_il symboltable pad local_flag exns =
 		       `Call(`Fun(e_rslices,
 				  `Object("self",
 					  [],
-					  [ "hydro_slices", 
+					  [ "hydro_slices",
 					    `Evar e_rslices;
 
-					    "hydro_effective_id", 
+					    "hydro_effective_id",
 					    `Evar e_typeid;
 					  ],
 					  "Hydro_types.sliced_value")
@@ -1354,7 +1354,7 @@ let exns_to_il symboltable pad local_flag exns =
 		     `Fail
 		   else
 		     `Match_variants(
-		       `CallM(`Typeann(`Evar e_uexn, 
+		       `CallM(`Typeann(`Evar e_uexn,
 				       "user_exception"),
 			      "hydro_ops#exn_name"),
 		       ( List.map
@@ -1365,7 +1365,7 @@ let exns_to_il symboltable pad local_flag exns =
 				       [ `CallM(`Evar e_uexn,
 						("hydro_ops#as_" ^ he#mapped_name))
 				       ]) in
-			      (he#mapped_name, 
+			      (he#mapped_name,
 			       `Pair(`String_lit id,
 				     enc_call)
 			      )
@@ -1380,7 +1380,7 @@ let exns_to_il symboltable pad local_flag exns =
     pad.letrecs <- ("encode_exception", encode) :: pad.letrecs;
     pad.letrec_sigs <- ("encode_exception", encode_t) :: pad.letrec_sigs;
   );
-    
+
   (* Add User_exception and Local_user_exception: *)
   if local_flag then
     pad.exns <- ("Local_user_exception",
@@ -1392,7 +1392,7 @@ let exns_to_il symboltable pad local_flag exns =
   (* Generate the definition term: *)
   (* (Only done when not local_flag so it is only generated once) *)
   if not local_flag then (
-    pad.defterms <- 
+    pad.defterms <-
       List.map
         (fun (he:TS.hexn) ->
 	   let id = Hgen_util.TS_util.colon_name he#name in
@@ -1417,7 +1417,7 @@ let exns_to_il symboltable pad local_flag exns =
 						       )
 					       )
 					       he#data_elements)
-			
+
 		    ],
 		    "Hydro_types.hexn"
 		   )
@@ -1464,8 +1464,8 @@ let proxy_impl_of_method symboltable ho hf e_proxy e_intf : expr_term =
 		      `Array_lit
 			(Array.map
 			   (fun (n,tt,e) ->
-			      let (f, _) = 
-				generate_marshalling_of_ref 
+			      let (f, _) =
+				generate_marshalling_of_ref
 				  symboltable tt in
 			      `Call(f, [ `Evar e ])
 			   )
@@ -1493,10 +1493,10 @@ let class_fun_type_of_method symboltable ho hf : type_term =
 	   mk_fun_type (i+1)
 	  )
     else
-      let emit_fun = 
+      let emit_fun =
 	`Fun(`Named("rr_" ^ ho#mapped_name ^ "__" ^ hf#mapped_name),
 	     `Unit) in
-      let emit_exn_fun = 
+      let emit_exn_fun =
 	`Fun(`Named "user_exception", `Unit) in
       `Fun(emit_fun,
 	   `Fun(emit_exn_fun,
@@ -1594,9 +1594,9 @@ let intf_to_il1 symboltable pad implements ho =
   let pr_variants =
     Array.of_list
       (List.map (fun super_ho -> super_ho#mapped_name) super_ho_list) in
-  pad.types <- 
+  pad.types <-
     ("pr_" ^ ho#mapped_name,
-     `Named_arg1(`Variant pr_variants, "Hydro_lm.proxy_reference")) :: 
+     `Named_arg1(`Variant pr_variants, "Hydro_lm.proxy_reference")) ::
     pad.types;
 
   (* "ofpr_<proxy>" and "topr_<proxy>" *)
@@ -1619,7 +1619,7 @@ let intf_to_il1 symboltable pad implements ho =
        let r_name = "r_" ^ ho#mapped_name ^ "__" ^ hf#mapped_name in
        pad.ctypes <- (r_name,
 		      `Object([],
-			      [ "hydro_response", 
+			      [ "hydro_response",
 				    `Named "Hydro_lm.client_response";
 				"result",
 				     (translate_tt symboltable hf#result);
@@ -1639,12 +1639,12 @@ let intf_to_il1 symboltable pad implements ho =
        pad.letrecs2 <- ("to_" ^ r_name,
 			`Fun(e_result,
 			     `Object("self",
-				     [], 
-				     ( [ "hydro_response", 
+				     [],
+				     ( [ "hydro_response",
 					   `Typeann(`Evar e_result,
 						    "Hydro_lm.client_response"
 						   );
-					 "result", 
+					 "result",
 					   `CallF("catch_exn",
 						  [ to_result;
 						    `Evar e_result
@@ -1767,11 +1767,11 @@ let intf_to_il1 symboltable pad implements ho =
   pad.class_sigs <- ("pc_" ^ ho#mapped_name,
 		     `Fun(`Named "Hydro_proxy.proxy_env_t",
 			  `Fun(`Named ("pr_" ^ ho#mapped_name),
-			       `Named ("po_" ^ ho#mapped_name)))) :: 
+			       `Named ("po_" ^ ho#mapped_name)))) ::
     pad.class_sigs;
   pad.class_sigs <- ("pci_" ^ ho#mapped_name,
 		     `Fun(`Named "Hydro_proxy.proxy_t",
-			  `Named ("poi_" ^ ho#mapped_name))) :: 
+			  `Named ("poi_" ^ ho#mapped_name))) ::
     pad.class_sigs;
  *)
   pad.classes <- ("pci_" ^ ho#mapped_name, pci_def) :: pad.classes;
@@ -1792,7 +1792,7 @@ let intf_to_il1 symboltable pad implements ho =
 			`CallF("Hydro_lm.Unsafe.wrap_proxy",
 			       [ `CallF("Hydro_lm.Unsafe.unwrap_proxy",
 					[ `Evar e_pr ])
-			       ]) 
+			       ])
 		       )) :: pad.letrecs3;
   pad.letrec_sigs <- ("unchecked_pr_" ^ ho#mapped_name,
 		      `Fun(`Named "'t Hydro_lm.proxy_reference",
@@ -1807,7 +1807,7 @@ let intf_to_il1 symboltable pad implements ho =
 		   (`Object("self",
 			    [],
 			    ["name", `String_lit id;
-			     "super", 
+			     "super",
 			     `List_lit
 			       (List.map
 				  (fun ho' ->
@@ -1831,7 +1831,7 @@ let intf_to_il1 symboltable pad implements ho =
 
 let intf_to_il symboltable pad implements ho =
   match ho#imported_from with
-    | None -> 
+    | None ->
 	intf_to_il1 symboltable pad implements ho
     | Some modname ->
 	let id = Hgen_util.TS_util.colon_name ho#name in
@@ -1866,9 +1866,9 @@ let intf_to_il symboltable pad implements ho =
 			   `Fun(`Named "Hydro_proxy.proxy_t",
 				`Named(modname ^ ".pci_" ^ ho#mapped_name))):: pad.class_sigs;
 	 *)
-	
+
 	pad.letrecs3 <- ("pc_" ^ ho#mapped_name,
-			 `Var(modname ^ ".pc_" ^ ho#mapped_name)) :: 
+			 `Var(modname ^ ".pc_" ^ ho#mapped_name)) ::
 	  pad.letrecs3;
 	pad.letrec_sigs <- ("pc_" ^ ho#mapped_name,
 			    `Fun(`Named "Hydro_proxy.proxy_env_t",
@@ -1928,7 +1928,7 @@ let cls_to_il1 symboltable pad implements ho =
        does not have a super class, and this is not handled here
      *)
     match ho#super with
-      | None -> 
+      | None ->
 	  assert false
       | Some ho_super -> ho_super in
 
@@ -1944,15 +1944,15 @@ let cls_to_il1 symboltable pad implements ho =
 
   (* "or_<name>": This is only reasonable for non-local real classes *)
   if ho#objtype = `Class && not ho#local then (
-    pad.types <- 
+    pad.types <-
       ("or_" ^ ho#mapped_name,
        `Opaque(`Named "Hydro_lm.object_base")) :: pad.types;
 
     (* "ofor_<name>" and "toor_<name>" *)
-    let (f_of, _) = 
+    let (f_of, _) =
       generate_marshalling_of
 	symboltable (Some (ho :> TS.hnamed)) (`Object ho#name) in
-    let (f_to, _) = 
+    let (f_to, _) =
       generate_marshalling_to
 	symboltable (Some (ho :> TS.hnamed)) um_id (`Object ho#name) in
     pad.letrecs <- ("ofor_" ^ ho#mapped_name,
@@ -1997,7 +1997,7 @@ let cls_to_il1 symboltable pad implements ho =
     let ho_super = get_ho_super() in
     pad.ctypes <- ("od_" ^ ho#mapped_name,
 		   `Object( [ (* inherits: *)
-			      `Named("od_" ^ ho_super#mapped_name) 
+			      `Named("od_" ^ ho_super#mapped_name)
 			    ],
 			    Array.to_list          (* methods: *)
 			      (Array.map
@@ -2052,7 +2052,7 @@ let cls_to_il1 symboltable pad implements ho =
 				[ `Named("od_" ^ ho#mapped_name) ]
 			      else
 				[]
-			    ) @ 
+			    ) @
 			      [ `Named ("oi_" ^ ho#mapped_name) ]
 			    @
 				( if ho#local then
@@ -2104,10 +2104,10 @@ let cls_to_il1 symboltable pad implements ho =
 			 `Object  (* no data object - do not copy the obj! *)
 			   ( "self",
 			     [ `Call                    (* inherits *)
-				 (`Var("delegate_od_" ^ 
+				 (`Var("delegate_od_" ^
 					 ho_super#mapped_name),
 				  [ `Evar e_od ]
-				 ) 
+				 )
 			     ],
 			     ( Array.to_list            (* methods *)
 				 (Array.map
@@ -2130,13 +2130,13 @@ let cls_to_il1 symboltable pad implements ho =
   (
     let ho_super_name =
       match ho#super with
-	| None -> 
+	| None ->
 	    (* use Ice::Object instead *)
 	    if ho#local then
 	      "delegate_oi_Ice_LocalObject"
 	    else
 	      "delegate_oi_Ice_Object"
-	| Some ho_super -> 
+	| Some ho_super ->
 	    "delegate_oi_" ^ ho_super#mapped_name in
     pad.class_sigs <- ("delegate_oi_" ^ ho#mapped_name,
 		       `Fun(`Named("#oi_" ^ ho#mapped_name),
@@ -2150,7 +2150,7 @@ let cls_to_il1 symboltable pad implements ho =
 			     [ `Call                      (* inherits *)
 				 (`Var ho_super_name,
 				  [ `Evar e_oi ]
-				 ) 
+				 )
 			     ],
 			     ( List.map
 				 (fun hf ->
@@ -2175,7 +2175,7 @@ let cls_to_il1 symboltable pad implements ho =
     pad.letrec_sigs <- ("dec_" ^ ho#mapped_name,
 			`Fun(`Named_arg1(`Named "Hydro_types.slice", "list"),
 			     `Tuple[dt;
-				    `Named_arg1(`Named "Hydro_types.slice", 
+				    `Named_arg1(`Named "Hydro_types.slice",
 						"list")])
 		       ) :: pad.letrec_sigs;
     let e_slices1 = new_evar() in
@@ -2214,7 +2214,7 @@ let cls_to_il1 symboltable pad implements ho =
 					 id,
 					 e_elems,
 					 `Pair
-					   (`Tuple(dec_elems @ 
+					   (`Tuple(dec_elems @
 						     [`Evar e_parent_vals ]) ,
 					    `Evar e_slices2_tl
 					   )
@@ -2248,7 +2248,7 @@ let cls_to_il1 symboltable pad implements ho =
 	   )
 	   ho#data_elements
 	) in
-    
+
     let e_parent = new_evar() in
 
     pad.classes <- ("mk_od_" ^ ho#mapped_name,
@@ -2340,9 +2340,9 @@ let cls_to_il1 symboltable pad implements ho =
 						     [ `Coerce_expr
 							 ( `Evar e_od,
 							   "",
-							   ("od_" ^ 
+							   ("od_" ^
 							      ho#mapped_name)
-							 ) 
+							 )
 						     ])
 					    ])
 				   );
@@ -2381,9 +2381,9 @@ let cls_to_il1 symboltable pad implements ho =
        - but _not_ Ice::(Local)Object
        This is computed by taking the difference: all_intf - all_super_classes
      *)
-    let real_super_classes = 
+    let real_super_classes =
       match ho#super with
-	| None -> 
+	| None ->
 	    []
 	| Some ho_super ->
 	    let ho_super_id = Hgen_util.TS_util.colon_name ho_super#name in
@@ -2392,7 +2392,7 @@ let cls_to_il1 symboltable pad implements ho =
 	      (CiMap.find ho_super_id implements) in
     let remaining_ho_list =
       List.filter
-	(fun ho -> 
+	(fun ho ->
 	   ho # name <> `Absolute [ "Ice"; "Object" ] &&
 	   ho # name <> `Absolute [ "Ice"; "LocalObject" ] &&
 	   not (List.mem ho#name real_super_classes))
@@ -2413,7 +2413,7 @@ let cls_to_il1 symboltable pad implements ho =
 
     let e_oi = new_evar() in
     let e_name = new_evar() in
-    pad.letrecs <- 
+    pad.letrecs <-
       ("dispatch_" ^ ho#mapped_name,
        `Fun(
 	 e_oi,
@@ -2488,13 +2488,13 @@ let cls_to_il1 symboltable pad implements ho =
 							symboltable ty in
 						    `Call(arg_to_fn,
 							  [ `CallM(`Evar e_rr,
-								   ("out_" ^ 
+								   ("out_" ^
 								      mn)) ])
 						 )
 						 hf#out_args)
 					  ]),
 				    e_userexn,
-				    (`Call(`Evar e_emit_exn, 
+				    (`Call(`Evar e_emit_exn,
 					   [ `Evar e_userexn ])),
 				    e_anyexn,
 				    (`Call(`CallM(`Evar e_session,
@@ -2506,13 +2506,13 @@ let cls_to_il1 symboltable pad implements ho =
 			      ])),
 			  [ (* emit_exn: *)
 			    let e_ue = new_evar() in
-			    `Fun(e_ue, 
+			    `Fun(e_ue,
 				 `Ifthenelse(
 				   `CallF("List.mem",
 					  [ `CallM(`Evar e_ue,
 						   "hydro_ops#exn_name");
-					    `Var("declexns_" ^ 
-						   ho#mapped_name ^ "__" ^ 
+					    `Var("declexns_" ^
+						   ho#mapped_name ^ "__" ^
 						   hf#mapped_name)
 					  ]),
 				   `Call(`CallM(`Evar e_session,
@@ -2532,7 +2532,7 @@ let cls_to_il1 symboltable pad implements ho =
 	     (* Case: `Match_string catch rest *)
 	     ( let super_dispatch_name =
 		 match ho#super with
-		   | None -> 
+		   | None ->
 		       (* Substitute Ice::(Local)Object *)
 		       if ho#local then "Ice_LocalObject" else "Ice_Object"
 		   | Some ho_super ->
@@ -2581,7 +2581,7 @@ let cls_to_il1 symboltable pad implements ho =
 			     [ `Call(`Var "Hydro_lm_IceObject.ops_Ice_Object",
 				     [ `String_lit typeid;
 				       `Array_lit
-					 (Array.map 
+					 (Array.map
 					    (fun s -> `String_lit s)
 					    all_typeids)
 				     ])
@@ -2644,7 +2644,7 @@ let cls_to_il1 symboltable pad implements ho =
 					 List.map
 					   (fun ho' ->
 					      let id' =
-						Hgen_util.TS_util.colon_name 
+						Hgen_util.TS_util.colon_name
 						  ho'#name in
 					      (id',
 					       `Raise_expr
@@ -2717,7 +2717,7 @@ let cls_to_il1 symboltable pad implements ho =
 			      [],
 			      ["name", `String_lit id;
 			       "super", `CallC("Some",
-					       [ `Dtvar("classdt_" ^ 
+					       [ `Dtvar("classdt_" ^
 							  ho_super#mapped_name)
 					       ]
 					      );
@@ -2725,7 +2725,7 @@ let cls_to_il1 symboltable pad implements ho =
 			       ( `Array_lit
 				   (Array.map
 				      (fun (n,_,tt) ->
-					 `Pair(`String_lit n, 
+					 `Pair(`String_lit n,
 					       dt_of_type symboltable tt)
 				      )
 				      ho#data_elements)
@@ -2741,7 +2741,7 @@ let cls_to_il1 symboltable pad implements ho =
 		     `Ctor,
 		     (`Fun(e_sv,
 			   `Coerce_expr(`CallC("new",
-					       [ `Var("restore_" ^ 
+					       [ `Var("restore_" ^
 							ho#mapped_name);
 						 `Evar e_sv
 					       ]),
@@ -2759,7 +2759,7 @@ let cls_to_il2 modname symboltable pad ho =
 
   (* "or_<name>": This is only reasonable for non-local real classes *)
   if ho#objtype = `Class && not ho#local then (
-    pad.types <- 
+    pad.types <-
       ("or_" ^ ho#mapped_name,
        `Named(modname ^ ".or_" ^ ho#mapped_name)
       ) :: pad.types;
@@ -2863,7 +2863,7 @@ let cls_to_il2 modname symboltable pad ho =
 
 let cls_to_il symboltable pad implements ho =
   match ho#imported_from with
-    | None -> 
+    | None ->
 	cls_to_il1 symboltable pad implements ho
     | Some modname ->
 	cls_to_il2 modname symboltable pad ho
@@ -2871,7 +2871,7 @@ let cls_to_il symboltable pad implements ho =
 
 
 let objs_to_il symboltable pad objs local_flag =
-  (* We need to iterate over the objects from top to bottom in the 
+  (* We need to iterate over the objects from top to bottom in the
      inheritance graph
    *)
   let objs_done = ref CiSet.empty in
@@ -2906,12 +2906,12 @@ let objs_to_il symboltable pad objs local_flag =
       Array.of_list(List.map (fun ho -> ho#mapped_name) objs) in
     let pname_type = `Variant all_mapped_names in
     pad.types <- ("proxy_name", pname_type) :: pad.types;
-  );    
+  );
 
   (* Fill !implements once: *)
   let implements = ref CiMap.empty in
   (* Maps ho#name to the list of implemented interfaces *)
-  
+
   traverse
     (fun ho ->
        let n = Hgen_util.TS_util.colon_name ho#name in
@@ -2922,16 +2922,16 @@ let objs_to_il symboltable pad objs local_flag =
 	       let n_super = Hgen_util.TS_util.colon_name ho_super#name in
 	       CiMap.find n_super !implements in
        let impl_list =
-	 List.map 
+	 List.map
 	   (fun ho_intf ->
 	      let n_intf = Hgen_util.TS_util.colon_name ho_intf#name in
 	      CiMap.find n_intf !implements
 	   )
 	   ho#super_intf in
-       implements := 
+       implements :=
 	 CiMap.add n (ho::(impl_super @ List.flatten impl_list)) !implements;
     );
-   
+
   if not local_flag then (
     (* Now per proxy: *)
     traverse (intf_to_il symboltable pad !implements)
@@ -2948,7 +2948,7 @@ let objs_to_il symboltable pad objs local_flag =
 				  `Fun(`Fun(`Named "user_exception", `Unit),
 				       `Fun(`Named "Hydro_types.session",
 					    `Unit))))) :: pad.letrec_sigs;
-    
+
   let e_f = new_evar() in
   let e_emit = new_evar() in
   let e_emit_exn = new_evar() in

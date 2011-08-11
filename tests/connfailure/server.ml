@@ -103,10 +103,10 @@ let main() =
      object.
    *)
 
-  let id = ( object 
+  let id = ( object
 	       method name = "MySingleGreeter"
 	       method category = ""
-	     end 
+	     end
 	   ) in
   (* The id of the ICE object *)
 

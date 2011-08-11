@@ -20,16 +20,16 @@ object
   method result : 't
 end
 
-class type r_Ice_Object_ice_ping = 
+class type r_Ice_Object_ice_ping =
   [unit] r_simple_response
 
-class type r_Ice_Object_ice_id = 
+class type r_Ice_Object_ice_id =
   [string] r_simple_response
 
-class type r_Ice_Object_ice_ids = 
+class type r_Ice_Object_ice_ids =
   [string array] r_simple_response
 
-class type r_Ice_Object_ice_isA = 
+class type r_Ice_Object_ice_isA =
   [bool] r_simple_response
 
 val to_r_Ice_Object_ice_ping :
@@ -92,27 +92,27 @@ type uncallable
 
 class type oi_Ice_Object =
 object
-  method ice_ping : unit -> 
-                    (rr_Ice_Object_ice_ping -> unit) -> 
+  method ice_ping : unit ->
+                    (rr_Ice_Object_ice_ping -> unit) ->
                     (uncallable -> unit) ->
                     Hydro_types.session ->
                       unit
-  method ice_id : unit -> 
-                  (rr_Ice_Object_ice_id -> unit) -> 
+  method ice_id : unit ->
+                  (rr_Ice_Object_ice_id -> unit) ->
                   (uncallable -> unit) ->
                   Hydro_types.session ->
                       unit
-  method ice_ids : unit -> 
-                   (rr_Ice_Object_ice_ids -> unit) -> 
+  method ice_ids : unit ->
+                   (rr_Ice_Object_ice_ids -> unit) ->
                    (uncallable -> unit) ->
                    Hydro_types.session ->
                       unit
-  method ice_isA : string -> 
-                   (rr_Ice_Object_ice_isA -> unit) -> 
+  method ice_isA : string ->
+                   (rr_Ice_Object_ice_isA -> unit) ->
                    (uncallable -> unit) ->
                    Hydro_types.session ->
                       unit
-  method hydro_invoke_operation : 
+  method hydro_invoke_operation :
     string -> Hydro_types.value array -> Hydro_types.session -> unit
   method hydro_effective_id :
     string
@@ -143,7 +143,7 @@ val unwrap_Ice_Object : or_Ice_Object -> o_Ice_Object
 val ofor_Ice_Object : or_Ice_Object -> Hydro_types.value
 val toor_Ice_Object : Hydro_types.value -> or_Ice_Object
 
-val dispatch_Ice_Object : 
+val dispatch_Ice_Object :
   oi_Ice_Object -> string -> Hydro_types.value array -> Hydro_types.session ->
   unit
 
@@ -151,7 +151,7 @@ class delegate_od_Ice_Object : #od_Ice_Object -> od_Ice_Object
 
 class delegate_oi_Ice_Object : #oi_Ice_Object -> oi_Ice_Object
 
-val dec_Ice_Object : Hydro_types.slice list -> 
+val dec_Ice_Object : Hydro_types.slice list ->
                          unit * Hydro_types.slice list
 
 val enc_Ice_Object : #od_Ice_Object -> Hydro_types.slice list

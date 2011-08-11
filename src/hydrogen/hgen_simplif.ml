@@ -8,7 +8,7 @@ open Printf
    * (fun x -> f x)     --> f
  *)
 
-let rec descent_expr (f:expr_term -> expr_term) (e:expr_term) 
+let rec descent_expr (f:expr_term -> expr_term) (e:expr_term)
           : expr_term  =
   match e with
     | `Match1(e1, p, e2) ->
@@ -88,12 +88,12 @@ let rec descent_expr (f:expr_term -> expr_term) (e:expr_term)
     | `Noreturn e1 ->
 	`Noreturn (f e1)
 
-    | `Int_lit _ 
-    | `Int32_lit _ 
+    | `Int_lit _
+    | `Int32_lit _
     | `Int64_lit _
     | `String_lit _
     | `Float_lit _
-    | `Bool_lit _ 
+    | `Bool_lit _
     | `Evar _
     | `Var _
     | `Dtvar _
@@ -121,10 +121,10 @@ let rec simplify_expr (e:expr_term) =
 	  simplify_expr e1'
 	else
 	  simplify_expr (`Call(e1', eother))
-	    
+
     | `Call(`MFun(v :: vl, e1), e2 :: el) ->
 	let e1' = subst_evar v e2 e1 in
-	simplify_expr 
+	simplify_expr
 	  ( match vl, el with
 	      | [], [] -> e1'
 	      | [], _  -> `Call(e1', el)
@@ -142,7 +142,7 @@ let rec simplify_expr (e:expr_term) =
 		simplify_expr e1
 	    | (`Evar u) :: rvl' when v = u ->
 		simplify_expr (`Call(e1, List.rev rvl'))
-	    | _ -> 
+	    | _ ->
 		descent_expr simplify_expr e
 	)
 
@@ -153,7 +153,7 @@ let rec simplify_expr (e:expr_term) =
 		simplify_expr (`Var n)
 	    | (`Evar u) :: rvl' when v = u ->
 		simplify_expr (`CallF(n, List.rev rvl'))
-	    | _ -> 
+	    | _ ->
 		descent_expr simplify_expr e
 	)
 
@@ -163,11 +163,11 @@ let rec simplify_expr (e:expr_term) =
 	( match rvl1, rvl2 with
 	    | [v1], [`Evar v2] when v1=v2 ->
 		simplify_expr e1
-	    | (v1 :: rvl1'), (`Evar v2 :: rvl2') 
+	    | (v1 :: rvl1'), (`Evar v2 :: rvl2')
 		when v1 = v2 && rvl1' <> [] && rvl2' <> [] ->
 		simplify_expr
 		  (`MFun(List.rev rvl1', `Call(e1, List.rev rvl2')))
-	    | _ -> 
+	    | _ ->
 		descent_expr simplify_expr e
 	)
 
@@ -181,15 +181,15 @@ let rec simplify_expr (e:expr_term) =
 		when v1 = v2 && rvl1' <> [] && rvl2' <> [] ->
 		simplify_expr
 		  (`MFun(List.rev rvl1', `CallF(n, List.rev rvl2')))
-	    | _ -> 
+	    | _ ->
 		descent_expr simplify_expr e
 	)
-    | _ -> 
+    | _ ->
 	descent_expr simplify_expr e
 
 
 let simplify_top_expr (e:expr_term) =
-  (* At the top-level of a "let rec" there must be a function. So 
+  (* At the top-level of a "let rec" there must be a function. So
      skip that
    *)
   match e with
@@ -353,7 +353,7 @@ let split_letrecs letrecs =
   let get_partition n =
     try
       Hashtbl.find partitions n
-    with Not_found -> 
+    with Not_found ->
       new_partition n
   in
 
@@ -362,7 +362,7 @@ let split_letrecs letrecs =
        UNION-FIND.
      *)
     match p.parent with
-      | Some pp -> 
+      | Some pp ->
 	  let pp' = find_representative pp in
 	  p.parent <- Some pp';
 	  pp
@@ -452,7 +452,7 @@ let split_letrecs letrecs =
 		with Not_found -> StrSet.empty) in
        Hashtbl.replace part_members p_repr_name (StrSet.add n m);
        let l = try Hashtbl.find g n with Not_found -> assert false in
-       let u = ref (try Hashtbl.find part_uses p_repr_name 
+       let u = ref (try Hashtbl.find part_uses p_repr_name
 		    with Not_found -> StrSet.empty) in
        StrSet.iter
 	 (fun n' ->
@@ -503,7 +503,7 @@ let split_letrecs letrecs =
 	@ [n]
     )
   in
-  let r = 
+  let r =
     Hashtbl.fold
       (fun n _ acc ->
 	 let out = output n in
@@ -513,9 +513,9 @@ let split_letrecs letrecs =
       [] in
   List.map
     (fun n ->
-       let mems = 
+       let mems =
 	 try Hashtbl.find part_members n with Not_found -> StrSet.empty in
-       StrSet.fold 
+       StrSet.fold
 	 (fun n' acc -> (n', Hashtbl.find terms n') :: acc)
 	 mems
 	 []

@@ -12,7 +12,7 @@ let read_msg_header s pos =
     let proto_minor = Char.code s.[pos+5] in
     let enc_major = Char.code s.[pos+6] in
     let enc_minor = Char.code s.[pos+7] in
-    
+
     let msg_type_ch = s.[pos+8] in
     let zstatus_ch = s.[pos+9] in
     let size = Hydro_unmarshal.read_int s (pos+10) in
@@ -26,12 +26,12 @@ let read_msg_header s pos =
 	| '\003' -> `Validate_connection
 	| '\004' -> `Close_connection
 	| _ -> failwith "Invalid message type" in
-    
+
     let zstatus =
       match zstatus_ch with
 	| '\000' -> `Compression_unsupported
 	| '\001' -> `Uncompressed
-	| '\002' -> `Compressed 
+	| '\002' -> `Compressed
 	| _ -> failwith "Invalid compression status" in
 
     ( object
@@ -59,7 +59,7 @@ let write_msg_header  s pos (hdr:msg_header) =
   String.unsafe_set s (pos+1) 'c';
   String.unsafe_set s (pos+2) 'e';
   String.unsafe_set s (pos+3) 'P';
-  
+
   String.unsafe_set s (pos+4) (Char.chr hdr#proto_major);
   String.unsafe_set s (pos+5) (Char.chr hdr#proto_minor);
   String.unsafe_set s (pos+6) (Char.chr hdr#enc_major);
@@ -73,7 +73,7 @@ let write_msg_header  s pos (hdr:msg_header) =
 	| `Validate_connection -> '\003'
 	| `Close_connection -> '\004'
     );
-  
+
   String.unsafe_set s (pos+9)
     ( match hdr#compression with
 	| `Compression_unsupported -> '\000'
@@ -125,7 +125,7 @@ let write_msg (hdr, bufs) =
     raise(Protocol_violation `CompressionNotSupported);
 
   (* Checking bufs integrity: *)
-  List.iter 
+  List.iter
     (fun buf ->
        let l = Netbuffer.length buf.encap_buf in
        assert(buf.encap_pos >= 0);
@@ -150,7 +150,7 @@ let write_msg_chunk wr s pos len =
     let avail = wr.wr_size - wr.wr_pos in
     while !n = 0 do
       match wr.wr_bufs with
-	| [] -> 
+	| [] ->
 	    if wr.wr_pos = wr.wr_size then
 	      raise End_of_file
 	    else

@@ -37,9 +37,9 @@ rule split_words = parse
 	{ Chars "\009" :: split_words lexbuf }
     | '\\' [ '0'-'7' ] [ '0'-'7' ]? [ '0'-'7' ]?
 	{ let tok = octal_char (Lexing.lexeme lexbuf) in
-	  tok :: split_words lexbuf 
+	  tok :: split_words lexbuf
 	}
-    | '\\' _ 
+    | '\\' _
 	(* Undocumented *)
 	{ let tok = Chars (String.sub (Lexing.lexeme lexbuf) 1 1) in
 	  tok :: split_words lexbuf }
@@ -47,9 +47,9 @@ rule split_words = parse
 	{ let qs = quoted_string '"' lexbuf in
 	  qs @ split_words lexbuf
 	}
-    | '\'' 
+    | '\''
 	{ let qs = quoted_string '\'' lexbuf in
-	  qs @ split_words lexbuf 
+	  qs @ split_words lexbuf
 	}
     | ':'
 	{ Colon :: split_words lexbuf }
@@ -88,18 +88,18 @@ and quoted_string delim = parse
 	{ let tok = octal_char (Lexing.lexeme lexbuf) in
 	  tok :: quoted_string delim lexbuf
 	}
-    | '\\' _ 
+    | '\\' _
 	(* Undocumented *)
 	{ let tok = Chars (String.sub (Lexing.lexeme lexbuf) 1 1) in
 	  tok :: quoted_string delim lexbuf
 	}
-    | '"' 
+    | '"'
 	{ if delim = '"' then
 	    []
 	  else
 	    Chars "\"" :: quoted_string delim lexbuf
 	}
-    | '\'' 
+    | '\''
 	{ if delim = '\'' then
 	    []
 	  else

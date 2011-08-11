@@ -3,7 +3,7 @@ open Hydro_util
 open Hydro_prelim
 
 let e_exceed n =
-  raise(Unmarshal_error ("Message exceeds encapsulation (#" ^ 
+  raise(Unmarshal_error ("Message exceeds encapsulation (#" ^
 	  string_of_int n ^ ")"))
 
 let e_int_range() =
@@ -17,7 +17,7 @@ let read_bool s p =
   match n0 with
     | 0 -> false
     | 1 -> true
-    | _ -> e_bool() 
+    | _ -> e_bool()
 
 let unmarshal_bool s cur end_pos =
   if !cur >= end_pos then e_exceed 30;
@@ -73,7 +73,7 @@ let read_int32 s p =
   let n2 = Char.code (String.unsafe_get s (p+2)) in
   let n1 = Char.code (String.unsafe_get s (p+1)) in
   let n0 = Char.code (String.unsafe_get s p) in
-  Int32.logor 
+  Int32.logor
     (Int32.shift_left n3 24)
     (Int32.of_int ((n2 lsl 16) lor (n1 lsl 8) lor n0))
 
@@ -92,15 +92,15 @@ let read_int64 s p =
   let n2 = Char.code (String.unsafe_get s (p+2)) in
   let n1 = Char.code (String.unsafe_get s (p+1)) in
   let n0 = Char.code (String.unsafe_get s p) in
-  Int64.logor 
+  Int64.logor
     (Int64.shift_left n7 56)
-    (Int64.logor 
+    (Int64.logor
        (Int64.shift_left n6 48)
-       (Int64.logor 
+       (Int64.logor
 	  (Int64.shift_left n5 40)
-	  (Int64.logor 
+	  (Int64.logor
 	     (Int64.shift_left n4 32)
-	     (Int64.logor 
+	     (Int64.logor
 		(Int64.shift_left n3 24)
 		(Int64.of_int ((n2 lsl 16) lor (n1 lsl 8) lor n0))))))
 
@@ -109,7 +109,7 @@ let unmarshal_int64 s cur end_pos =
   let n = read_int64 s !cur in
   cur := !cur+8;
   n
-    
+
 let read_float s p =
   let x = read_int32 s p in
   Int32.float_of_bits x
@@ -136,7 +136,7 @@ let unmarshal_size s cur end_pos =
   if c = '\255' then (
     if !cur >= end_pos+4 then e_exceed 11;
     let n = read_int s (!cur+1) in
-    if n < 255 then 
+    if n < 255 then
       raise(Unmarshal_error "Bad size encoding");
     cur := !cur+5;
     n
@@ -146,7 +146,7 @@ let unmarshal_size s cur end_pos =
     Char.code c
   )
 
-let unmarshal_string s cur end_pos =  
+let unmarshal_string s cur end_pos =
   let n = unmarshal_size s cur end_pos in
   if !cur+n > end_pos then e_exceed 20;
   let u = String.create n in
@@ -183,10 +183,10 @@ let unmarshal_enum n s cur end_pos =
   if k >= n then
     raise(Unmarshal_error "enum out of range");
   k
-	
+
 let decode_facet facet_seq =
   match facet_seq with
-    | [| |] -> None 
+    | [| |] -> None
     | [| VString fc |] -> Some fc
     | _ -> raise(Unmarshal_error "Invalid facet sequence")
 
@@ -215,7 +215,7 @@ let decapsulate_str s pos len =
   let size = read_int s pos in
   if size > len then
     raise(Unmarshal_error "Cannot break up encapsulation");
-  
+
   if s.[pos+4] <> '\001' then
     raise(Limitation `UnsupportedEncodingVersion);
   if s.[pos+5] <> '\000' then
@@ -228,7 +228,7 @@ let decapsulate eb =
   let nb_len = Netbuffer.length eb.encap_buf in
   if eb.encap_pos < 0 || eb.encap_len < 0 || eb.encap_pos+eb.encap_len > nb_len then
     invalid_arg "Hydro_unmarshal.decapsulate: invalid substring";
-  
+
   let s = Netbuffer.unsafe_buffer eb.encap_buf in
   let pos', len' = decapsulate_str s eb.encap_pos eb.encap_len in
 
@@ -237,13 +237,13 @@ let decapsulate eb =
     encap_len = len';
     encap_enc_minor = 0;  (* or read it from s *)
   }
-   
+
 
 type unmarshal_env =
     { cmap : (int32, CiStrSet.t * object_value) Hashtbl.t;
         (* Maps inst_id to (class_names, class_value) where
            - class_names are the absolute type IDs that occur in the slices
-           - class_value is the object 
+           - class_value is the object
            - inst_id is the instance ID used in the serialized string
          *)
       cpatches : (int32, (string * class_repr ref) list) Hashtbl.t;
@@ -330,7 +330,7 @@ let rec unmarshal_value env (sys:system) ht s cur end_pos =
 	    with
 	      | Not_found ->
 		  let cval = ref (`Placeholder inst_id) in
-		  let l = 
+		  let l =
 		    try Hashtbl.find env.cpatches inst_id
 		    with Not_found -> [] in
 		  Hashtbl.replace env.cpatches inst_id ((cname,cval) :: l);
@@ -373,15 +373,15 @@ let rec unmarshal_value env (sys:system) ht s cur end_pos =
 			if !cur+1 >= end_pos then e_exceed 42;
 			let ep_t = read_short s !cur in
 			cur := !cur+2;
-			let (pos', len') = 
+			let (pos', len') =
 			  decapsulate_str s !cur (end_pos - !cur) in
 			let cur' = ref pos' in
 			let end_pos' = pos' + len' in
 			let ep =
 			  match ep_t with
 			    | 1 | 2 -> (* TCP and SSL *)
-				let v = 
-				  unmarshal_value 
+				let v =
+				  unmarshal_value
 				    env sys t_tcp_endpoint s cur' end_pos' in
 				if !cur' <> end_pos' then
 				  raise(Unmarshal_error "Illegal proxy endpoint");
@@ -399,13 +399,13 @@ let rec unmarshal_value env (sys:system) ht s cur end_pos =
 					      method compress = compress
 					    end
 					  ) in
-					if ep_t = 1 then `TCP ep_obj 
+					if ep_t = 1 then `TCP ep_obj
 					else `SSL ep_obj
 				    | _ -> assert false
 				)
 			    | 3 -> (* UDP *)
-				let v = 
-				  unmarshal_value 
+				let v =
+				  unmarshal_value
 				    env sys t_udp_endpoint s cur' end_pos' in
 				if !cur' <> end_pos' then
 				  raise(Unmarshal_error "Illegal proxy endpoint");
@@ -432,7 +432,7 @@ let rec unmarshal_value env (sys:system) ht s cur end_pos =
 					`UDP ep_obj
 				    | _ -> assert false
 				)
-			    | n -> 
+			    | n ->
 				`Unknown(n, String.sub s pos' len')
 			in
 			ep_array.(k) <- ep;
@@ -450,9 +450,9 @@ let rec unmarshal_value env (sys:system) ht s cur end_pos =
 		      if s = "" then
 			`Well_known  (* CHECK *)
 		      else
-			`Adapter s 
+			`Adapter s
 		    ) in
-		  let id_obj = 
+		  let id_obj =
  	            (object method name=id_name method category=id_cat end) in
 		  VProxy
 		    ( object
@@ -467,7 +467,7 @@ let rec unmarshal_value env (sys:system) ht s cur end_pos =
 	  )
     | TDirectMapping(ht',_,unmarshal) ->
 	VDirectMapping(unmarshal s cur end_pos)
-	  
+
 
 and unmarshal_class_val env sys inst_id s cur end_pos =
   if Hashtbl.mem env.cmap inst_id then
@@ -495,10 +495,10 @@ and unmarshal_class_val env sys inst_id s cur end_pos =
 
   let cur_class_id = ref first_class_id in
   let cur_slice_len = ref first_slice_len in
-  
+
   while not (CiHashtbl.mem sys#classes !cur_class_id) do
-    let slice = 
-      `Opaque(!cur_class_id, 
+    let slice =
+      `Opaque(!cur_class_id,
 	      String.sub s !cur (!cur_slice_len - 4)) in
 
     cur := !cur + !cur_slice_len - 4;
@@ -508,7 +508,7 @@ and unmarshal_class_val env sys inst_id s cur end_pos =
 
     let next_class_id, next_slice_len =
       unmarshal_class_slice_header env s cur end_pos in
-    
+
     cur_class_id := next_class_id;
     cur_slice_len := next_slice_len
   done;
@@ -547,21 +547,21 @@ and unmarshal_class_val env sys inst_id s cur end_pos =
       | None -> assert false
   done;
 
-  let ctor = 
+  let ctor =
     try CiHashtbl.find sys#ctors effective_id
     with Not_found ->
-      raise(Unmarshal_error("No object constructor found for class ID: " ^ 
+      raise(Unmarshal_error("No object constructor found for class ID: " ^
 			      effective_id)) in
   let sliceval =
-    ( object 
-	method hydro_slices = !slices  
+    ( object
+	method hydro_slices = !slices
 	method hydro_effective_id = effective_id
       end ) in
   let objval = ctor sliceval in
   let cval = `Value objval in
-  
+
   (* Run through cpatches and update: *)
-  
+
   let l =
     try Hashtbl.find env.cpatches inst_id with Not_found -> [] in
   List.iter
@@ -578,8 +578,8 @@ and unmarshal_class_val env sys inst_id s cur end_pos =
 
   cval, !known_class_id_list
 
-  
-  
+
+
 and unmarshal_class_slice_header env s cur end_pos =
   if !cur >= end_pos then e_exceed 60;
   let c = s.[ !cur ] in
@@ -598,7 +598,7 @@ and unmarshal_class_slice_header env s cur end_pos =
 	try
 	  Hashtbl.find env.tmap tid
 	with
-	  | Not_found -> 
+	  | Not_found ->
 	      raise(Unmarshal_error "Invalid type ID number")
       )
       else
@@ -607,11 +607,11 @@ and unmarshal_class_slice_header env s cur end_pos =
   if !cur+3 >= end_pos then e_exceed 61;
   let slice_len = read_int s !cur in
   cur := !cur+4;
-  
+
   (type_id, slice_len)
 
 
-let dbg_message_too_long s cur end_pos =  
+let dbg_message_too_long s cur end_pos =
   prerr_endline "Uninterpreted rest: ";
   for k = !cur to end_pos - 1 do
     prerr_endline ("At " ^ string_of_int k ^ ": " ^ string_of_int(Char.code(s.[k])));
@@ -639,7 +639,7 @@ let unmarshal_class_appendix env sys s cur end_pos =
 
 let unmarshal sys ht class_flag eb =
   let nb = eb.encap_buf
-  and pos = eb.encap_pos 
+  and pos = eb.encap_pos
   and len = eb.encap_len in
 
   let nb_len = Netbuffer.length nb in
@@ -688,7 +688,7 @@ let unmarshal_exn_slice_header env s cur end_pos =
 
 let unmarshal_exn sys eb =
   let nb = eb.encap_buf
-  and pos = eb.encap_pos 
+  and pos = eb.encap_pos
   and len = eb.encap_len in
 
   let nb_len = Netbuffer.length nb in
@@ -717,12 +717,12 @@ let unmarshal_exn sys eb =
 	| '\001' -> incr cur; true
 	| _ -> raise(Unmarshal_error "Bool value out of range")
     ) in
-  
+
   (* Now read the slices. There may be slices with known exception IDs and with
      unknown exn IDs. There _must_ be a slice with a known exception ID
      and following slices must match our own exception definition.
 
-     If we don't find a known exception we run over the end of the slices. 
+     If we don't find a known exception we run over the end of the slices.
      There is no safe way to prevent that. (No "catch all" exception!)
    *)
 
@@ -733,20 +733,20 @@ let unmarshal_exn sys eb =
 
   let cur_exn_id = ref first_exn_id in
   let cur_slice_len = ref first_slice_len in
-  
+
   while not (CiHashtbl.mem sys#exceptions !cur_exn_id) do
-    let slice = 
-      `Opaque(!cur_exn_id, 
+    let slice =
+      `Opaque(!cur_exn_id,
 	      String.sub s !cur (!cur_slice_len - 4)) in
 
     cur := !cur + !cur_slice_len - 4;
     if !cur > end_pos then e_exceed 91;
-    
+
     slices := slice :: !slices;
 
     let next_exn_id, next_slice_len =
       unmarshal_exn_slice_header env s cur end_pos in
-    
+
     cur_exn_id := next_exn_id;
     cur_slice_len := next_slice_len
   done;
@@ -810,7 +810,7 @@ let unmarshal_msg sys (hdr:msg_header) eb : msg =
     raise(Limitation `UnsupportedEncodingVersion);
 
   let nb = eb.encap_buf
-  and pos = eb.encap_pos 
+  and pos = eb.encap_pos
   and len = eb.encap_len in
 
   let nb_len = Netbuffer.length nb in
@@ -850,7 +850,7 @@ let unmarshal_msg sys (hdr:msg_header) eb : msg =
 		  cur := p_pos + p_len;
 
 		  let id =
-		    (object method name = id_name method category = id_cat 
+		    (object method name = id_name method category = id_cat
 		     end) in
 		  let facet = decode_facet facet_seq in
 		  let mode = decode_mode mode_num in
@@ -863,7 +863,7 @@ let unmarshal_msg sys (hdr:msg_header) eb : msg =
 			method operation = op
 			method mode = mode
 			method context = context
-			method params = 
+			method params =
 			  { encap_buf = nb;
 			    encap_pos = p_pos;
 			    encap_len = p_len;
@@ -879,7 +879,7 @@ let unmarshal_msg sys (hdr:msg_header) eb : msg =
 	  if !cur+3 >= end_pos then e_exceed 100;
 	  let n = read_int s !cur in
 	  cur := !cur+4;
-	  
+
 	  let reqs = ref [] in
 	  for k = 1 to n do
 	    let v =
@@ -892,12 +892,12 @@ let unmarshal_msg sys (hdr:msg_header) eb : msg =
 			     VByte mode_num;
 			     VDictionary ctx
 			  |] ->
-		    let (p_pos, p_len) = 
+		    let (p_pos, p_len) =
 		      decapsulate_str s !cur (end_pos - !cur) in
 		    cur := p_pos + p_len;
 
 		    let id =
-		      (object method name = id_name method category = id_cat 
+		      (object method name = id_name method category = id_cat
 		       end) in
 		    let facet = decode_facet facet_seq in
 		    let mode = decode_mode mode_num in
@@ -909,7 +909,7 @@ let unmarshal_msg sys (hdr:msg_header) eb : msg =
 			  method operation = op
 			  method mode = mode
 			  method context = context
-			  method params = 
+			  method params =
 			    { encap_buf = nb;
 			      encap_pos = p_pos;
 			      encap_len = p_len;
@@ -925,7 +925,7 @@ let unmarshal_msg sys (hdr:msg_header) eb : msg =
 	  `Batch_request (List.rev !reqs)
 
       | `Reply ->
-	  let v = 
+	  let v =
 	    unmarshal_value env sys t_msg_reply s cur end_pos in
 	  ( match v with
 	      | VStruct [| VInt32 req_id;
@@ -937,8 +937,8 @@ let unmarshal_msg sys (hdr:msg_header) eb : msg =
                    *)
 		  let result =
 		    ( match reply_type with
-			| 0 -> 
-			    let (p_pos, p_len) = 
+			| 0 ->
+			    let (p_pos, p_len) =
 			      decapsulate_str s !cur (end_pos - !cur) in
 			    cur := p_pos + p_len;
 			    `Success
@@ -947,8 +947,8 @@ let unmarshal_msg sys (hdr:msg_header) eb : msg =
 				encap_len = p_len;
 				encap_enc_minor = eb.encap_enc_minor
 			      }
-			| 1 -> 
-			    let (p_pos, p_len) = 
+			| 1 ->
+			    let (p_pos, p_len) =
 			      decapsulate_str s !cur (end_pos - !cur) in
 			    cur := p_pos + p_len;
 			    `User_exception
@@ -958,8 +958,8 @@ let unmarshal_msg sys (hdr:msg_header) eb : msg =
 				encap_enc_minor = eb.encap_enc_minor
 			      }
 			| 2 | 3 | 4 ->
-			    let w = 
-			      unmarshal_value 
+			    let w =
+			      unmarshal_value
 				env sys t_msg_reply_error s cur end_pos in
 			    if !cur <> end_pos then
 			      raise(Unmarshal_error "Illegal reply");
@@ -971,9 +971,9 @@ let unmarshal_msg sys (hdr:msg_header) eb : msg =
 					     VString op
 					  |] ->
 				    let id =
-				      (object 
-					 method name = id_name 
-					 method category = id_cat 
+				      (object
+					 method name = id_name
+					 method category = id_cat
 				       end) in
 				    (id, decode_facet facet_seq, op)
  				| _ -> assert false
@@ -984,7 +984,7 @@ let unmarshal_msg sys (hdr:msg_header) eb : msg =
 				| 4 -> `Operation_does_not_exist(e_id,e_facet,e_op)
 				| _ -> assert false
 			    )
-			      
+
 			| 5 | 6 | 7 ->
 			    let e = unmarshal_string s cur end_pos in
 			    if !cur <> end_pos then
@@ -999,7 +999,7 @@ let unmarshal_msg sys (hdr:msg_header) eb : msg =
 			    raise (Unmarshal_error "Unknown type of reply")
 		    ) in
 		  `Reply
-		    ( object 
+		    ( object
 			method request_id = req_id
 			method result = result
 		      end

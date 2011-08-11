@@ -73,9 +73,9 @@ file_marshal.mli:
 (* somewhere defined: *)
 class c_Ice_Object : t_Ice_Object
 
-class c_Sample_Class1 : 
+class c_Sample_Class1 :
          ~text:string -> ~code:int -> t_Sample_Class1
-class c_Sample_Class2 : 
+class c_Sample_Class2 :
          ~text:string -> ~code:int -> ~detail:string -> t_Sample_Class2
 
 class map_Sample_Class1 : sliced_value -> class_value
@@ -157,7 +157,7 @@ let lazy_decode_Sample_Class2 sv =
 
 class map_Sample_Class1 sv =
   (* Important: sv may still contain `Placeholders! This is why we decode
-     it lazily, i.e. on demand 
+     it lazily, i.e. on demand
    *)
   let (_, sv1) = lazy_decode_Ice_Object sv in
   let (value2, sv2) = lazy_decode_Sample_Class1 sv1 in
@@ -165,7 +165,7 @@ class map_Sample_Class1 sv =
 
 class map_Sample_Class2 sv =
   (* Important: sv may still contain `Placeholders! This is why we decode
-     it lazily, i.e. on demand 
+     it lazily, i.e. on demand
    *)
   let (_, sv1) = lazy_decode_Ice_Object sv in
   let (value2, sv2) = lazy_decode_Sample_Class1 sv1 in
@@ -232,7 +232,7 @@ let map_any sys sv =
 
 Walk through for decoding a received class value:
 
-- The unmarshaller reads a slice_value sv. 
+- The unmarshaller reads a slice_value sv.
 
 - The unmarshaller _immediately_ maps sv to a class_value cv.
   Mapping means instantiating one of the c_* classes.
@@ -245,7 +245,7 @@ Walk through for decoding a received class value:
 Walk through for encoding a class value:
 
 - If in a language-mapped graph a class object is found, it is
-  a subtype of class_value. of_class generically creates the 
+  a subtype of class_value. of_class generically creates the
   value from it by coercing to the base class, and by adding a bit of
   decoration.
 

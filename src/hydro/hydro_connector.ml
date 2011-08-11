@@ -19,17 +19,17 @@ type client_connector =
     ]
 
 let client_endpoint_type =
-  function 
+  function
     | `Endpoint(ep,_) -> endpoint_type ep
 
 type master_connector =
-    [ `Anon_endpoint_IPv4 of endpoint_type 
-    | `Anon_endpoint_IPv6 of endpoint_type 
+    [ `Anon_endpoint_IPv4 of endpoint_type
+    | `Anon_endpoint_IPv6 of endpoint_type
     | `Named_endpoint of Unix.sockaddr * endpoint_type
     ]
 
 let master_endpoint_type =
-  function 
+  function
     | `Anon_endpoint_IPv4 ept -> ept
     | `Anon_endpoint_IPv6 ept -> ept
     | `Named_endpoint(_,ept) -> ept
@@ -38,14 +38,14 @@ class type transporter =
 object
   method endpoint_type : Hydro_types.endpoint_type
   method proxy_modes : proxy_mode list
-  method client_connect_engine : client_connector -> 
+  method client_connect_engine : client_connector ->
                                  Unixqueue.event_system ->
                                    multiplexed_descriptor Uq_engines.engine
   method server_endpoint : descriptor -> Hydro_types.server_params -> endpoint
   method server_multiplex_connection : descriptor ->
                                        Unixqueue.event_system ->
                                          multiplexed_descriptor Uq_engines.engine
-  method server_create_engine : master_connector -> 
+  method server_create_engine : master_connector ->
                                 Unixqueue.event_system ->
                                   descriptor Uq_engines.engine
   method server_accept_engine : descriptor ->
@@ -56,7 +56,7 @@ end
 
 class type mplex_config =
 object
-  method multiplexing : 
+  method multiplexing :
     descriptor -> Unixqueue.event_system -> multiplexed_descriptor Uq_engines.engine
 end
 
@@ -66,13 +66,13 @@ let mplex_of_descr descr esys =
     | `Stream ->
 	Hydro_transport.stream_hydro_multiplex_controller
 	  ~close_inactive_descr:false  (* this is done by descr#shutdown *)
-	  descr#file_descr 
+	  descr#file_descr
 	  esys
 
     | `Datagram ->
 	Hydro_transport.datagram_hydro_multiplex_controller
 	  ~close_inactive_descr:false  (* this is done by descr#shutdown *)
-	  descr#file_descr 
+	  descr#file_descr
 	  esys
 
 
@@ -83,7 +83,7 @@ object
       try
         let mplex = mplex_of_descr descr esys in
 	let c =
-	  ( object 
+	  ( object
 	      method ctrl = mplex
 	      method file_descr = descr#file_descr
 	      method proto_type = descr#proto_type
@@ -116,7 +116,7 @@ let register_transporter tp =
 
 let get_transporter ept =
   try Hashtbl.find tp_reg ept
-  with Not_found -> 
+  with Not_found ->
     let n =
       match ept with
 	| `TCP -> 1
@@ -146,7 +146,7 @@ let descriptor fd is_master tpt =
 
 let connect_engine_for_ca ca tpt cfg esys =
   new Uq_engines.seq_engine
-    (try 
+    (try
        Uq_engines.connector ca esys
      with Not_found as nf ->    (* HACK *)
        match ca with
@@ -262,7 +262,7 @@ let udp_transporter =
 	mc # multiplexing descr esys
 
       method server_create_engine mc esys =
-	let one_step_eng = 
+	let one_step_eng =
 	  new Uq_engines.epsilon_engine (`Done()) esys in
 	new Uq_engines.map_engine
 	  ~map_done:(fun () ->
@@ -271,7 +271,7 @@ let udp_transporter =
 			   match mc with
 			     | `Anon_endpoint_IPv4 _ -> Unix.PF_INET
 			     | `Anon_endpoint_IPv6 _ -> Unix.PF_INET6
-			     | `Named_endpoint(addr,_) -> 
+			     | `Named_endpoint(addr,_) ->
 				 Unix.domain_of_sockaddr addr in
 			 let s = Unix.socket dom Unix.SOCK_DGRAM 0 in
 			 ( try
@@ -292,7 +292,7 @@ let udp_transporter =
 			 | err -> `Error err
 		    )
 	  one_step_eng
-	
+
       method server_accept_engine descr esys =
 	new Uq_engines.epsilon_engine (`Done descr) esys
 
@@ -304,7 +304,7 @@ let tcp_endpoint_of_file_descr addr tmo_f (compress : bool) =
   match addr with
     | Unix.ADDR_INET(inet,port) ->
 	let host = Unix.string_of_inet_addr inet in
-	let tmo = 
+	let tmo =
 	  if tmo_f < 0.0 then (-1l) else Int32.of_float (1000.0 *. tmo_f) in
 	( object
 	    method host = host
@@ -337,7 +337,7 @@ let tcp_transporter =
 	mc # multiplexing descr esys
 
       method server_create_engine mc esys =
-	let one_step_eng = 
+	let one_step_eng =
 	  new Uq_engines.epsilon_engine (`Done()) esys in
 	new Uq_engines.map_engine
 	  ~map_done:(fun () ->
@@ -346,7 +346,7 @@ let tcp_transporter =
 			   match mc with
 			     | `Anon_endpoint_IPv4 _ -> Unix.PF_INET
 			     | `Anon_endpoint_IPv6 _ -> Unix.PF_INET6
-			     | `Named_endpoint(addr,_) -> 
+			     | `Named_endpoint(addr,_) ->
 				 Unix.domain_of_sockaddr addr in
 			 let s = Unix.socket dom Unix.SOCK_STREAM 0 in
 			 ( try
@@ -369,7 +369,7 @@ let tcp_transporter =
 			 | err -> `Error err
 		    )
 	  one_step_eng
-	
+
       method server_accept_engine descr esys =
 	let acceptor =
 	  new Uq_engines.direct_socket_acceptor

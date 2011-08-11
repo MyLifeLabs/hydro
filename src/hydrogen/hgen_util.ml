@@ -20,32 +20,32 @@ let bolloc_multi_nl bolloc lexbuf n m =
 let bolloc_nl bolloc lexbuf =
   (* next line, when lexbuf just consumed the LF *)
   bolloc_multi_nl bolloc lexbuf 1 0
-    
+
 let count_lf s =
   let n = ref 0 in
   let m = ref 0 in
   for k = 0 to String.length s - 1 do
-    if s.[k] = '\n' then 
+    if s.[k] = '\n' then
       ( incr n; m := 0 )
     else
       incr m
   done;
   !n, !m
-    
+
 let at_bol bolloc lexbuf =
   bolloc.bol = Lexing.lexeme_start lexbuf
 
 let loc_of_token =
   function
     | ( K_BOOL loc | K_ENUM loc | K_IMPLEMENTS loc | K_MODULE loc |
-        K_STRUCT loc | K_BYTE loc | K_EXCEPTION loc | 
+        K_STRUCT loc | K_BYTE loc | K_EXCEPTION loc |
         K_THROWS loc | K_CLASS loc | K_EXTENDS loc | K_INTERFACE loc |
         K_OUT loc | K_TRUE loc | K_CONST loc | K_FALSE loc | K_LOCAL loc |
         K_SEQUENCE loc | K_VOID loc | K_DICTIONARY loc |
         K_SHORT loc | K_DOUBLE loc | K_IDEMPOTENT loc | K_LONG loc |
         K_STRING loc | K_INT loc | K_FLOAT loc |
         IDENT(_,loc) | STRING_LITERAL(_,loc,_) | INT_LITERAL(_,loc) |
-        FLOAT_LITERAL(_,loc) | 
+        FLOAT_LITERAL(_,loc) |
         LBRACE loc | RBRACE loc | LANGLE loc | RANGLE loc | LPAREN loc |
         RPAREN loc | LBRACK loc | RBRACK loc | LDBRACK loc | RDBRACK loc |
         SEMI loc | COMMA loc | ASTERISK loc | DCOLON loc | EQUAL loc | EOF loc
@@ -92,23 +92,23 @@ module TS_util = struct
       | `Enum l -> "[" ^ String.concat "|" (Array.to_list l) ^ "]"
       | `Struct(d,eq_opt) ->
 	  let d = Array.to_list d in
-	  "{ "  ^ 
-	    String.concat "; " 
+	  "{ "  ^
+	    String.concat "; "
 	      (List.map
 		 (fun (n,mn,tt',is_mutable) -> n ^ "/" ^ mn ^ " : " ^ (if is_mutable then " mutable " else "") ^ (typeterm_string tt'))
 		 d
 	      ) ^ " }"
       | `Struct_tuple d ->
 	  let d = Array.to_list d in
-	  "( "  ^ 
-	    String.concat " * " 
+	  "( "  ^
+	    String.concat " * "
 	      (List.map
 		 (fun (n,tt') -> n ^ " : " ^ (typeterm_string tt'))
 		 d
 	      ) ^ " )"
       | `Sequence tt' -> "sequence<" ^ typeterm_string tt' ^ ">"
       | `Dictionary(tt1, tt2) ->
-	  "dictionary<" ^ typeterm_string tt1 ^ "," ^ 
+	  "dictionary<" ^ typeterm_string tt1 ^ "," ^
 	    typeterm_string tt2 ^ ">"
       | `Proxy n -> "proxy<" ^ colon_name n ^ ">"
       | `Object n -> "object<" ^ colon_name n ^ ">"
@@ -180,7 +180,7 @@ module TS_util = struct
 		 ho#op_elements;
 	       if ho#local then printf "    local\n";
 	       List.iter (fun m -> printf "    meta=%s\n" (print_meta_def m)) ho#meta
-       
+
 	   | `Exn he ->
 	       printf "  Exception\n";
 	       printf "    mapped_name=%s\n" he#mapped_name;

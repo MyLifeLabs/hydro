@@ -1,4 +1,4 @@
-type loc = 
+type loc =
   { file : string;
     line : int;     (* Line number, starting with 1 *)
     offset : int;   (* Offset from beginning of file, starting with 0 *)
@@ -21,7 +21,7 @@ module CiString = struct  (* case-insensitive *)
 end
 
 module CiHashtbl = Hashtbl.Make(CiString)
-  
+
 module StrSet = Set.Make(String)
 
 module CiSet = Set.Make(CiString)
@@ -168,7 +168,7 @@ module AST = struct
       loc : loc;
     >
 
-  and operation = 
+  and operation =
     < name : string;
       typ : typ;   (* result type *)
       params : param list;
@@ -298,7 +298,7 @@ module TS = struct
         super : hobject option;
 	   (* These are super classes. Only classes may have super classes *)
 	super_intf : hobject list;
-	   (* When a class has a super interface, this is the 
+	   (* When a class has a super interface, this is the
               "implements" relation. When an interface has super interfaces
               this is interface inheritance
 
@@ -429,7 +429,7 @@ module IL = struct
       ]
 
   type expr_term =
-      [ `Match1 of expr_term * pat_term * expr_term 
+      [ `Match1 of expr_term * pat_term * expr_term
 	  (* match e with p -> e' | _ -> fail *)
       | `Match1_Null of expr_term * pat_term * expr_term * expr_term
 	  (* match e with p -> e' | VNull -> e'' | _ -> fail *)
@@ -468,7 +468,7 @@ module IL = struct
       | `Record_lit of (string * expr_term) array
 	  (* { n1 = e1; n2 = e2; ... } *)
       | `Record_lit_ord of (string * expr_term) array
-	  (* same, but it is ensured that the experssions are evaluated in 
+	  (* same, but it is ensured that the experssions are evaluated in
              order
 	   *)
       | `Int_lit of int
@@ -488,7 +488,7 @@ module IL = struct
       | `Tuple of expr_term list
 	  (* (e1,e2, ...). For empty list: () *)
       | `Tuple_ord of expr_term list
-	  (* same, but it is ensured that the experssions are evaluated in 
+	  (* same, but it is ensured that the experssions are evaluated in
              order
 	   *)
       | `Evar of int
@@ -558,7 +558,7 @@ module IL = struct
   type pad =
       (* All lists in reverse order *)
       { mutable types : (string * type_term) list;
-	mutable ctypes : (string * ctype_term) list; 
+	mutable ctypes : (string * ctype_term) list;
 	mutable lets : (string * expr_term) list; (* For constants *)
 	mutable letrec_sigs : (string * type_term) list;
 	mutable letrecs : (string * expr_term) list;  (* Before User_exception *)

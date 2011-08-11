@@ -44,14 +44,14 @@ let find_shm_idx st =
 
 
 let open_shm config =
-  let fd = 
+  let fd =
     Netsys.shm_open
       config.shm_name [Netsys.SHM_O_RDWR; Netsys.SHM_O_CREAT] 0o666 in
   let st = Unix.fstat fd in
   if st.Unix.st_size = 0 then
     Unix.ftruncate fd config.shm_size;
   let shm =
-    Bigarray.Array1.map_file 
+    Bigarray.Array1.map_file
       fd Bigarray.char Bigarray.c_layout true config.shm_size in
   let shm_used =
     Array.make config.shm_size false in
@@ -148,7 +148,7 @@ let load_state st =
 	  failwith (st.config.state_file ^ ": " ^ msg)
       | e ->
 	  close_in file;
-	  failwith (st.config.state_file ^ ": Exception " ^ 
+	  failwith (st.config.state_file ^ ": Exception " ^
 		      Printexc.to_string e)
   )
 
@@ -195,7 +195,7 @@ let log_state_change info key =
   logf `Info "Change %s for %s" info (key_string key)
 
 
-let remove_obj st key = 
+let remove_obj st key =
   try
     let obj = Hashtbl.find st.monobjs key in (* or Not_found *)
     st.shm_used.( obj.shm_idx ) <- false;
@@ -220,15 +220,15 @@ let check_objects esys st key =
 	let now = Unix.gettimeofday() in
 	now < Int64.to_float obj.end_ts
       with Not_found -> false in
-      
+
     if do_check then (
       (* We intentionally create new pools and proxies for every ping.
          This enforces that a new connection is used every time.
        *)
       let obj = Hashtbl.find st.monobjs key in
       let sys = Lazy.force sys_lz in
-      let cl_params = 
-	Hydro_params.client_params 
+      let cl_params =
+	Hydro_params.client_params
 	  ~msg_timeout:st.config.ping_timeout () in
       (* MAYBE: exception_handler *)
       let resolver = Hydro_proxy.proxy_resolver cl_params in
@@ -245,7 +245,7 @@ let check_objects esys st key =
 	) in
       let addr = addr_of_key key in
       let proxy = Hydro_proxy.proxy ~env:proxy_env ~addr () in
-      let hfun = 
+      let hfun =
 	( object
 	    method name = key.operation
 	    method mode = (if key.idempotent then `Idempotent else `Normal)
@@ -256,7 +256,7 @@ let check_objects esys st key =
 	    method out_classes = false
 	  end
 	) in
-      let hintf = 
+      let hintf =
 	( object
 	    method name = "dummy"
 	    method super = []
@@ -328,7 +328,7 @@ object (self)
 	   | Some proxy ->
 	       let addr = Hydro_lm.Unsafe.unwrap_proxy proxy in
 	       let key =
-		 try key_of_addr addr operation idempotent 
+		 try key_of_addr addr operation idempotent
 		 with Failure msg -> error msg in
 	       let monobj_opt =
 		 try Some(Hashtbl.find st.monobjs key)
@@ -346,7 +346,7 @@ object (self)
 			 match find_shm_idx st with
 			   | Some i -> i
 			   | None ->
-			       raise(User_exception 
+			       raise(User_exception
 				       (x_Hydro_TooManyMonitoredObjects ()
 					  :> user_exception)) in
 		       let monobj =
@@ -367,7 +367,7 @@ object (self)
 		       let m = mk_monitoredObject st.config monobj in
 		       ( object method result = m end )
 	       )
-	   
+
       )
 
   method list () =
@@ -376,7 +376,7 @@ object (self)
 	 let l =
 	   Array.of_list
 	     (Hashtbl.fold
-		(fun _ monobj acc -> 
+		(fun _ monobj acc ->
 		   mk_monitoredObject st.config monobj :: acc)
 		st.monobjs
 		[]
@@ -408,7 +408,7 @@ let hydromon_processor config =
   let adapter = Hydro_oa.object_adapter() in
   let params = Hydro_params.server_params ~trans_timeout:60.0 () in
 
-  let id = 
+  let id =
     ( object method name = "hydromon" method category = "" end ) in
   let hydromon_obj =
     new hydromon_obj st in
@@ -428,7 +428,7 @@ let hydromon_processor config =
 
       method process ~when_done container fd proto_name =
         let esys = container # event_system in
-        let descr = 
+        let descr =
           Hydro_connector.descriptor fd false `Stream in
 
         let onabort srv =
@@ -512,7 +512,7 @@ let hydromon_factory ~name () =
 	    ping_period = ping_period;
 	    ping_timeout = ping_timeout
 	  } in
-	
+
 	hydromon_processor config
     end
   )

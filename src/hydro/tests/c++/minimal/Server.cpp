@@ -15,7 +15,7 @@ using namespace std;
 
 static Ice::CommunicatorPtr communicator;
 
-static void 
+static void
 onCtrlC(int)
 {
     if(communicator)

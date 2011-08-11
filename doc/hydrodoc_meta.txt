@@ -56,7 +56,7 @@ Hydro defines the following global annotations:
   {[     ["hydro:structprefix:foo"] struct s { int field1, string field2 } ]}
   would be mapped to the OCaml type
   {[     { foo_field1 : int; foo_field2 : string } ]}
-  It might be useful to reserve such prefixes with the 
+  It might be useful to reserve such prefixes with the
   [hydro:reserve:structprefix] global annotations to prevent that the
   prefix is automatically chosen for another record type
 - [ ["hydro:equals:T"] ] where [T] is an OCaml type expression:
@@ -82,23 +82,23 @@ that map [T->T'] and [T'->T].
 
 There are a few predefined enhancements:
 
-- [ ["hydro:mapping:list"] ]: If applied to the declaration of a 
+- [ ["hydro:mapping:list"] ]: If applied to the declaration of a
   sequence, Hydro will represent the sequence as list and not as
   array. For example:
   {[     ["hydro:mapping:list"] sequence<long> long_list ]}
-- [ ["hydro:mapping:option"] ]: If applied to the declaration of a 
+- [ ["hydro:mapping:option"] ]: If applied to the declaration of a
   sequence, Hydro will represent the sequence as option type and not as
   array. This makes a lot of sense because there is no option type
   in ICE, and it is common to (ab)use sequences when an option type
-  were really meant. - For example: 
+  were really meant. - For example:
   {[     ["hydro:mapping:option"] sequence<long> long_option ]}
   The unmarshaller will now fail if a [long_option] sequence is seen
   with more than 1 element.
-- [ ["hydro:mapping:hashtbl"] ]:  If applied to the declaration of a 
+- [ ["hydro:mapping:hashtbl"] ]:  If applied to the declaration of a
   dictionary, Hydro will represent the dictionary as hash table and not as
   associative list. For example:
   {[     ["hydro:mapping:hashtbl"] dictionary<string,int> wordcount ]}
-- [ ["hydro:mapping:strmap"] ]:  If applied to the declaration of a 
+- [ ["hydro:mapping:strmap"] ]:  If applied to the declaration of a
   dictionary, Hydro will represent the dictionary as string map and not as
   associative list. For example:
   {[     ["hydro:mapping:strmap"] dictionary<string,int> wordcount ]}
@@ -106,8 +106,8 @@ There are a few predefined enhancements:
   if not, you get an error when you try to compile the generated code.
   The [module StrMap = Map.Make(String)] is defined in {!Hydro_lm}.
 - [ ["hydro:mapping:complex"] ]: If applied to the declaration of
-  a [struct] with two floating-point fields (either [float] or 
-  [double]), Hydro will change the type to [Complex.t], i.e. the 
+  a [struct] with two floating-point fields (either [float] or
+  [double]), Hydro will change the type to [Complex.t], i.e. the
   [struct] is taken as complex number.
 - [ ["hydro:mapping:identity"] ]: This is used to represent the
   struct [Ice::Identity] as O'Caml type {!Hydro_types.identity}
@@ -137,7 +137,7 @@ A simple example is
 {[ [["hydro:defmapping:stringlist:string list:Array.to_list:Array.of_list"]] ]}
 
 which can be applied to ICE string sequences in order to represent
-them as OCaml string lists. Note that we have to convert to and from 
+them as OCaml string lists. Note that we have to convert to and from
 arrays as Hydro's native representation of sequences are arrays.
 
 As a special rule, applying a mapping to a [struct] implicitly also

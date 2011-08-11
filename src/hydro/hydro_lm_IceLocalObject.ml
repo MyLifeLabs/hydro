@@ -4,7 +4,7 @@ end
 
 class type oi_Ice_LocalObject =
 object
-  method hydro_invoke_operation : 
+  method hydro_invoke_operation :
     string -> Hydro_types.value array -> Hydro_types.session -> unit
   method hydro_effective_id :
     string
@@ -34,7 +34,7 @@ end
 let dispatch_Ice_LocalObject _ _ =
   raise Not_found
 
-class skel_Ice_LocalObject : oi_Ice_LocalObject = 
+class skel_Ice_LocalObject : oi_Ice_LocalObject =
 object(self)
   method hydro_invoke_operation =
     dispatch_Ice_LocalObject self

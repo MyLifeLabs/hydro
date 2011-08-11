@@ -70,7 +70,7 @@ HelloClient::run(int argc, char* argv[])
             {
                 twoway->sayHello(delay);
             }
-	    else if(c == 'p') 
+	    else if(c == 'p')
 	    {
 		int r,r1,r2;
 		r = twoway->output(r1,r2);
@@ -120,11 +120,11 @@ HelloClient::run(int argc, char* argv[])
                 {
                     timeout = -1;
                 }
-                
+
                 twoway = HelloPrx::uncheckedCast(twoway->ice_timeout(timeout));
                 oneway = HelloPrx::uncheckedCast(oneway->ice_timeout(timeout));
                 batchOneway = HelloPrx::uncheckedCast(batchOneway->ice_timeout(timeout));
-                
+
                 if(timeout == -1)
                 {
                     cout << "timeout is now switched off" << endl;
@@ -144,7 +144,7 @@ HelloClient::run(int argc, char* argv[])
                 {
                     delay = 0;
                 }
-                
+
                 if(delay == 0)
                 {
                     cout << "server delay is now disabled" << endl;
@@ -157,13 +157,13 @@ HelloClient::run(int argc, char* argv[])
             else if(c == 'S')
             {
                 secure = !secure;
-                
+
                 twoway = HelloPrx::uncheckedCast(twoway->ice_secure(secure));
                 oneway = HelloPrx::uncheckedCast(oneway->ice_secure(secure));
                 batchOneway = HelloPrx::uncheckedCast(batchOneway->ice_secure(secure));
                 datagram = HelloPrx::uncheckedCast(datagram->ice_secure(secure));
                 batchDatagram = HelloPrx::uncheckedCast(batchDatagram->ice_secure(secure));
-                
+
                 if(secure)
                 {
                     cout << "secure mode is now on" << endl;

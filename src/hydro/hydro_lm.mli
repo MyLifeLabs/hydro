@@ -9,7 +9,7 @@ type +'t proxy_reference
       language-mapped name of the proxy
    *)
 
-val pr_of_address : 
+val pr_of_address :
        Hydro_types.proxy_addr -> [ `Ice_Object ] proxy_reference
   (** Create a reference from a (low-level) proxy address *)
 
@@ -50,7 +50,7 @@ end
    *)
 
 
-class ['response] call_suspension : 
+class ['response] call_suspension :
   (Hydro_types.call_params -> (Hydro_endpoint.Client.response -> unit) -> unit) ->
   (Hydro_endpoint.Client.response -> 'response) ->
   Unixqueue.event_system ->
@@ -90,7 +90,7 @@ object
    method hydro_invoke_operation : string -> Hydro_types.value array -> Hydro_types.session -> unit
 end
   (** This is the class type of object interfaces. It is a subtype of
-      {!Hydro_lm.object_base} and corresponds to 
+      {!Hydro_lm.object_base} and corresponds to
       {!Hydro_types.operation_dispatcher}.
    *)
 
@@ -103,7 +103,7 @@ val object_of_class_repr : Hydro_types.class_repr ref -> object_base
 
 
 exception Error of int
-  (** An error produced by the generated lang mapping code. The int 
+  (** An error produced by the generated lang mapping code. The int
       is a generated number to identify the position in the generated code
    *)
 

@@ -81,7 +81,7 @@ let identity =
 let call name args =
   let client =
     Hydro_client.create system conn esys in
-  let resp1 = 
+  let resp1 =
     ref None in
   Hydro_client.twoway_call
     client
@@ -118,18 +118,18 @@ let getvalues n =
 	     | `Class { contents = `Value cv } ->
 		 let slices = cv#hydro_slices in
 		 ( match slices with
-		     | [ 
+		     | [
 			 `Decoded("::Ice::Object", _);
-			 `Decoded("::Demo::C", 
+			 `Decoded("::Demo::C",
 				  [| `String s |]);
 		       ] ->
 			 s
-			   
+
 		     | _ -> assert false
 		 )
 	     | _ -> assert false
 	  )
 	  seq
-	  
+
     | _ -> assert false
 ;;

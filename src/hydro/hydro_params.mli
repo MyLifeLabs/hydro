@@ -4,9 +4,9 @@ open Hydro_types
 
 val call_params :
       ?msg_timeout:float ->
-      ?destination:Unix.sockaddr -> 
+      ?destination:Unix.sockaddr ->
       ?context:(string * string) list ->
-      unit -> 
+      unit ->
         call_params
   (** Create a set of call parameters. Omitted values appear as [None] in the
       set:
@@ -24,21 +24,21 @@ val call_params :
 
 val update_call_params :
       ?msg_timeout:float ->
-      ?destination:Unix.sockaddr -> 
+      ?destination:Unix.sockaddr ->
       ?context:(string * string) list ->
-      call_params -> 
+      call_params ->
         call_params
   (** Modifies the given call params *)
 
 
 val client_params :
-       ?trans_timeout:float -> 
-       ?msg_timeout:float -> 
-       ?idle_timeout:float -> 
-       ?exception_handler: exn_handler -> 
+       ?trans_timeout:float ->
+       ?msg_timeout:float ->
+       ?idle_timeout:float ->
+       ?exception_handler: exn_handler ->
        ?max_proto_minor : int ->
        ?max_enc_minor : int ->
-       unit -> 
+       unit ->
          client_params
    (** Create a set of client parameters:
      - [trans_timeout]: If non-negative, a timeout on the transport
@@ -70,17 +70,17 @@ val client_params :
     *)
 
 val update_client_params :
-       ?trans_timeout:float -> 
-       ?msg_timeout:float -> 
-       ?idle_timeout:float -> 
-       ?exception_handler: exn_handler -> 
+       ?trans_timeout:float ->
+       ?msg_timeout:float ->
+       ?idle_timeout:float ->
+       ?exception_handler: exn_handler ->
        ?max_proto_minor : int option ->
        ?max_enc_minor : int option ->
-       client_params -> 
+       client_params ->
          client_params
     (** Modifies the given client params *)
 
-val update_client_params_by_endpoint : 
+val update_client_params_by_endpoint :
        endpoint -> client_params -> client_params
    (** Updates the [trans_timeout], [max_proto_minor] and [max_enc_minor]
        parameters by the values found in the endpoint:
@@ -100,8 +100,8 @@ val client_params_cmp : client_params -> client_params -> int
     *)
 
 val server_params :
-       ?trans_timeout:float -> 
-       unit -> 
+       ?trans_timeout:float ->
+       unit ->
          server_params
    (** Create a set of server parameters:
      - [trans_timeout]: If non-negative, a timeout on the transport
@@ -109,9 +109,9 @@ val server_params :
        than this number of seconds time out. In this case, the
        connection is dropped
     *)
- 
+
 val update_server_params :
-       ?trans_timeout:float -> 
-       server_params -> 
+       ?trans_timeout:float ->
+       server_params ->
          server_params
     (** Modifies the given server params *)

@@ -27,14 +27,14 @@ module Ice {
 
     interface LocatorRegistry {
         idempotent void setAdapterDirectProxy(string id, Object* proxy)
-	    throws AdapterNotFoundException, 
+	    throws AdapterNotFoundException,
 	    AdapterAlreadyActiveException;
 
 	idempotent void setReplicatedAdapterDirectProxy(string adapterId,
-							string replicaGroupId, 
+							string replicaGroupId,
 							Object* p)
-	    throws AdapterNotFoundException, 
-	    AdapterAlreadyActiveException, 
+	    throws AdapterNotFoundException,
+	    AdapterAlreadyActiveException,
 	    InvalidReplicaGroupIdException;
 
 	// setServerProcessProxy: missing

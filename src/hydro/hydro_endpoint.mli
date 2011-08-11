@@ -26,9 +26,9 @@ module Client : sig
   type t = [`Client_role] GeneralizedEndpoint.t
     (** A live client *)
 
-  val create : system -> 
-               Hydro_connector.client_connector -> 
-               Unixqueue.event_system -> 
+  val create : system ->
+               Hydro_connector.client_connector ->
+               Unixqueue.event_system ->
                  t
     (** Create a new client *)
 
@@ -49,7 +49,7 @@ module Client : sig
 	>
     (** A friendly version of response messages *)
 
-  val twoway_call : 
+  val twoway_call :
         ?facet:string ->
          t -> identity -> hintf -> string -> call_params ->
          value array ->
@@ -74,7 +74,7 @@ module Client : sig
     (** Returns an identifier for the client *)
 
   val shutdown : ?ondown:(unit->unit) -> t -> unit
-    (** Shut the client gracefully down (by sending a close connection 
+    (** Shut the client gracefully down (by sending a close connection
         message). This is an asynchronous shutdown. When it is done,
         the function [ondown] will be called.
      *)
@@ -102,11 +102,11 @@ module Server : sig
     (** A server endpoint for an existing connection *)
 
   val create : ?onabort:(t -> unit) ->
-               system -> 
-               endpoint_type -> 
+               system ->
+               endpoint_type ->
                descriptor ->
                server_params ->
-               Unixqueue.event_system -> 
+               Unixqueue.event_system ->
                  t
     (** Create a new server *)
 
@@ -146,10 +146,10 @@ end
 module Master : sig
   type t
 
-  val create : system -> 
+  val create : system ->
                Hydro_connector.master_connector ->
                server_params ->
-               Unixqueue.event_system -> 
+               Unixqueue.event_system ->
                  t
 
   val adapters : t -> object_dispatcher list

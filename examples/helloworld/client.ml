@@ -36,11 +36,11 @@ let main() =
   let sys = Hydro_lm.create_system() in
   Hello.fill_system sys;    (* Generated! *)
   let params = Hydro_params.client_params() in
-  let res = 
+  let res =
     match !locator_string with
-      | None -> 
+      | None ->
 	  Hydro_proxy.proxy_resolver params
-      | Some ls -> 
+      | Some ls ->
 	  let loc = Hydro_locator.get_Ice_Locator_of_string ls in
 	  Hydro_locator.proxy_resolver params loc in
   let pool = Hydro_proxy.pool() in
@@ -51,8 +51,8 @@ let main() =
 	method system = sys
 	method proxy_resolver = res
 	method client_pool = pool
-	method default_proxy_conf = proxy_conf 
-      end 
+	method default_proxy_conf = proxy_conf
+      end
 	: Hydro_proxy.proxy_env_t
     ) in
 
@@ -81,7 +81,7 @@ let main() =
 	(* Something went wrong. Errors are normally accumulated, and
            thrown when the [result] method is invoked
          *)
-	printf "Exception: %s\n%!" 
+	printf "Exception: %s\n%!"
 	  (Hydro_util.exn_to_string err)
 
 let () =

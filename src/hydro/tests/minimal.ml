@@ -67,8 +67,8 @@ let env =
   (object
      method event_system = esys
      method system = system
-     method proxy_resolver = 
-       Hydro_proxy.proxy_resolver 
+     method proxy_resolver =
+       Hydro_proxy.proxy_resolver
 	 (Hydro_params.client_params())
      method client_pool = pool
      method default_proxy_conf = Hydro_proxy.proxy_conf()

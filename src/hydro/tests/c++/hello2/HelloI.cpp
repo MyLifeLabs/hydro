@@ -44,7 +44,7 @@ HelloI::getvalues(int number, const Ice::Current& c)
 
 }
 
-int HelloI::output(int &oa1, int &oa2, const Ice::Current& c) 
+int HelloI::output(int &oa1, int &oa2, const Ice::Current& c)
 {
     oa1=1;
     oa2=2;

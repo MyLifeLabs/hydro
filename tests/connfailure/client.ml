@@ -65,8 +65,8 @@ let main() =
 	method system = sys
 	method proxy_resolver = res
 	method client_pool = pool
-	method default_proxy_conf = proxy_conf 
-      end 
+	method default_proxy_conf = proxy_conf
+      end
 	: Hydro_proxy.proxy_env_t
     ) in
 
@@ -102,14 +102,14 @@ let main() =
 		    : Hydro_types.tcp_endpoint
 		)
       ) in
-  let pa = 
+  let pa =
     ( object
 	method id = id
 	method facet = None
 	method mode = `Twoway
 	method secure = false
 	method parameters = `Endpoints eps
-      end 
+      end
 	: Hydro_types.proxy_addr
       ) in
   let pr = Hydro_lm.pr_of_address pa in
@@ -125,8 +125,8 @@ let main() =
     for k = 1 to !async do
       let cs = po # greetingMessage yourname in
       let params = cs#params in
-      let cs' = 
-	cs#with_params (Hydro_params.update_call_params 
+      let cs' =
+	cs#with_params (Hydro_params.update_call_params
 			  ~msg_timeout:!msg_timeout params) in
       printf "Request %d/%d\n%!" j k;
       cs' # acall
@@ -135,15 +135,15 @@ let main() =
 	   try
 	     let s = response # result in
 	     printf "Response %d/%d: %s\n%!" j k s;
-	     
+
 	     if k = !async then pool # shutdown();
 	   with
 	     | err ->
 		 (* Something went wrong. Errors are normally accumulated, and
                   thrown when the [result] method is invoked
 		  *)
-		 printf "Exception %d/%d: %s\n%!" 
-		   j k 
+		 printf "Exception %d/%d: %s\n%!"
+		   j k
 		   (Hydro_util.exn_to_string err)
 	)
     done;

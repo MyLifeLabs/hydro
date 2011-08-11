@@ -58,14 +58,14 @@ object
   method read_eof : bool
     (** Whether the EOF marker has been read *)
 
-  method start_reading : 
+  method start_reading :
     ?peek:( unit -> unit) ->
     ?before_record:( int -> sockaddr -> unit ) ->
-    when_done:( (msg_header * Netbuffer.t * sockaddr) result_eof -> unit) -> 
+    when_done:( (msg_header * Netbuffer.t * sockaddr) result_eof -> unit) ->
     unit -> unit
     (** Start reading from the connection. When a whole message has been
       * received, the [when_done] callback is invoked (with header,
-      * the full body in the netbuffer, and the socket address of the 
+      * the full body in the netbuffer, and the socket address of the
       * peer).
       *
       * This starts one-time read job only, i.e. it is not restarted
@@ -126,9 +126,9 @@ object
       * is only a protocol handshake. After a shutdown,[read_eof]
       * is true. Call [inactivate] to close the descriptor.
      *)
- 
+
   method cancel_shutting_down : unit -> unit
-    (** Cancels the shutdown procedure. After that, the state of the 
+    (** Cancels the shutdown procedure. After that, the state of the
       * connection is undefined. The [when_done] callback is invoked with
       * the [`Cancelled].
       *
@@ -145,7 +145,7 @@ object
 
   method inactivate : unit -> unit
     (** Inactivates the connection immediately, and releases any resources
-      * the controller is responsible for (e.g. closes file descriptors). 
+      * the controller is responsible for (e.g. closes file descriptors).
       * Note that this is more than
       * cancelling all pending operations and shutting the connection down.
       * However, the details of this method are implementation-defined.
@@ -169,9 +169,9 @@ val datagram_hydro_multiplex_controller :
   (** The multiplex controller for datagrams *)
 
 
-class stream_hydro_multiplex_controller : 
+class stream_hydro_multiplex_controller :
          sockaddr -> sockaddr -> string option ->
-         Uq_engines.multiplex_controller -> 
+         Uq_engines.multiplex_controller ->
          Unixqueue.event_system ->
             hydro_multiplex_controller
   (** The class is exported for the SSL transporter *)

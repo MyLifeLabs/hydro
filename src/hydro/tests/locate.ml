@@ -9,7 +9,7 @@ let esys = Unixqueue.create_unix_event_system();;
 
 let locator = Hydro_locator.get_Ice_Locator_of_port "gate" 9018;;
 
-let resolver = 
+let resolver =
   Hydro_locator.proxy_resolver
     (Hydro_client.client_params())
     locator;;

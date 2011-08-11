@@ -29,10 +29,10 @@ object
   method transport_protocol_type : transport_protocol_type
   method reading : bool
   method read_eof : bool
-  method start_reading : 
+  method start_reading :
     ?peek: (unit -> unit) ->
     ?before_record:( int -> sockaddr -> unit ) ->
-    when_done:( (msg_header * Netbuffer.t * sockaddr) result_eof -> unit) -> 
+    when_done:( (msg_header * Netbuffer.t * sockaddr) result_eof -> unit) ->
     unit -> unit
   method cancel_rd_polling : unit -> unit
   method abort_rw : unit -> unit
@@ -87,9 +87,9 @@ let write_msg_dgram wr s pos len =
 
 
 
-class datagram_hydro_multiplex_controller 
+class datagram_hydro_multiplex_controller
         sockname peername_opt peer_user_name_opt
-        (mplex : Uq_engines.datagram_multiplex_controller) esys 
+        (mplex : Uq_engines.datagram_multiplex_controller) esys
       : hydro_multiplex_controller =
 object(self)
   val rd_buffer = String.create 16384
@@ -102,7 +102,7 @@ object(self)
   method alive = mplex # alive
   method event_system = esys
   method getsockname = sockname
-  method getpeername = 
+  method getpeername =
     match peername_opt with
       | None -> failwith "#getpeername: not connected"
       | Some a -> a
@@ -126,7 +126,7 @@ object(self)
 			  if not skip_message then (
 			    match before_record with
 			      | None -> ()
-			      | Some f -> 
+			      | Some f ->
 				  f n peer
 				    (* It can happen that reading is
                                      * aborted in the meantime!
@@ -138,7 +138,7 @@ object(self)
 			    else (
 			      try
 				if n < 14 then raise(e_dgram_too_short());
-				let hdr = 
+				let hdr =
 				  Hydro_message.read_msg_header rd_buffer 0 in
 				let rd =
 				  Hydro_message.read_msg hdr in
@@ -160,7 +160,7 @@ object(self)
       0
       (String.length rd_buffer);
     self # timer_event `Start `R
-  
+
   method start_writing ~when_done mbuf addr =
     ( match addr with
 	| `Implied ->
@@ -206,7 +206,7 @@ object(self)
     aborted <- true;
     mplex # cancel_reading();
     mplex # cancel_writing()
-    
+
   method start_shutting_down ~when_done () =
     mplex # start_shutting_down
       ~when_done:(fun exn_opt ->
@@ -251,7 +251,7 @@ object(self)
 	      let g = Unixqueue.new_group esys in
 	      timer_group <- Some g;
 	      Unixqueue.once esys g tmo
-		(fun () -> 
+		(fun () ->
 		   timer_group <- None;
 		   notify()
 		)
@@ -275,9 +275,9 @@ end
 
 
 let datagram_hydro_multiplex_controller ?(close_inactive_descr=true) fd esys =
-  let sockname = 
+  let sockname =
     try
-      `Sockaddr(Unix.getsockname fd) 
+      `Sockaddr(Unix.getsockname fd)
     with
 	(* The OCaml runtime sometimes returns EAFNOSUPPORT when asked
            for inaccessible socket names. EOPNOTSUPP is documented
@@ -287,14 +287,14 @@ let datagram_hydro_multiplex_controller ?(close_inactive_descr=true) fd esys =
   let peername_opt =
     try Some(`Sockaddr(Unix.getpeername fd))
     with
-      | Unix.Unix_error((Unix.EAFNOSUPPORT|Unix.EOPNOTSUPP),_,_) -> 
+      | Unix.Unix_error((Unix.EAFNOSUPPORT|Unix.EOPNOTSUPP),_,_) ->
 	  Some `Implied
-      | Unix.Unix_error(Unix.ENOTCONN,_,_) -> 
+      | Unix.Unix_error(Unix.ENOTCONN,_,_) ->
 	  (* ENOTCONN is special because we allow to set the peer address
              per datagram in this case!
            *)
 	  None in
-  let mplex = 
+  let mplex =
     Uq_engines.create_multiplex_controller_for_datagram_socket
       ~close_inactive_descr
       fd esys in
@@ -329,7 +329,7 @@ let write_msg_whole_chunk wr s pos len =
 
 
 class stream_hydro_multiplex_controller sockname peername peer_user_name_opt
-        (mplex : Uq_engines.multiplex_controller) esys 
+        (mplex : Uq_engines.multiplex_controller) esys
       : hydro_multiplex_controller =
 object(self)
   val mutable wr_buffer = String.create 16384
@@ -404,7 +404,7 @@ object(self)
 		      skip_message <- false;
 		      process (pos+m) (len-m)
 		    ) else (
-		      rd_continuation <- 
+		      rd_continuation <-
 			Some(fun() -> process (pos+m) (len-m));
 		      return_msg (hdr, buf)
 		    )
@@ -418,10 +418,10 @@ object(self)
 		rd_mode <- `Header (hdr_len+m);
 		est_reading()
 	      )
-		
+
 	  | `Body(hdr, rd, buf) ->
 	      (* Read body data *)
-	      let real_len, msg_done = 
+	      let real_len, msg_done =
 		read_msg_whole_chunk rd rd_buffer pos len buf in
 	      if msg_done then (
 		rd_mode <- `Header 0;
@@ -429,7 +429,7 @@ object(self)
 		  skip_message <- false;
 		  process (pos+real_len) (len-real_len)
 		) else (
-		  rd_continuation <- 
+		  rd_continuation <-
 		    Some(fun() -> process (pos+real_len) (len-real_len));
 		  return_msg (hdr, buf)
 		)
@@ -455,7 +455,7 @@ object(self)
     and return_eof () =
       rd_continuation <- None;
       if not aborted then
-	when_done `End_of_file 
+	when_done `End_of_file
 
     in
     match rd_continuation with
@@ -479,8 +479,8 @@ object(self)
 				  when_done (`Ok ())
 				else (
 				  let m, wr_done =
-				    write_msg_whole_chunk 
-				      wr wr_buffer 
+				    write_msg_whole_chunk
+				      wr wr_buffer
 				      0 (String.length wr_buffer) in
 				  est_writing 0 m wr wr_done
 				)
@@ -537,7 +537,7 @@ object(self)
 		 )
       ();
     self # timer_event `Start `W
-    
+
   method start_shutting_down ~when_done () =
     mplex # start_shutting_down
       ~when_done:(fun exn_opt ->
@@ -582,7 +582,7 @@ object(self)
 	      let g = Unixqueue.new_group esys in
 	      timer_group <- Some g;
 	      Unixqueue.once esys g tmo
-		(fun () -> 
+		(fun () ->
 		   timer_group <- None;
 		   notify()
 		)
@@ -605,9 +605,9 @@ end
 
 
 let stream_hydro_multiplex_controller ?(close_inactive_descr=true) fd esys =
-  let sockname = 
+  let sockname =
     try
-      `Sockaddr(Unix.getsockname fd) 
+      `Sockaddr(Unix.getsockname fd)
     with
 	(* The OCaml runtime sometimes returns EAFNOSUPPORT when asked
            for inaccessible socket names. EOPNOTSUPP is documented
@@ -617,7 +617,7 @@ let stream_hydro_multiplex_controller ?(close_inactive_descr=true) fd esys =
          *)
       | Unix.Unix_error((Unix.EAFNOSUPPORT|Unix.EOPNOTSUPP|Unix.ENOTSOCK),
 			_,_) -> `Implied in
-  let peername = 
+  let peername =
     try
       `Sockaddr(Unix.getpeername fd)
     with
@@ -626,7 +626,7 @@ let stream_hydro_multiplex_controller ?(close_inactive_descr=true) fd esys =
          *)
       | Unix.Unix_error((Unix.EAFNOSUPPORT|Unix.EOPNOTSUPP|Unix.ENOTSOCK|Unix.ENOTCONN),
 			_,_) -> `Implied in
-  let mplex = 
+  let mplex =
     Uq_engines.create_multiplex_controller_for_connected_socket
       ~close_inactive_descr
       ~supports_half_open_connection:true

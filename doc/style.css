@@ -14,32 +14,32 @@ a:active {color : Red; text-decoration : underline; }
 .info { margin-left : 1cm; margin-right : 2cm }
 .param_info { margin-top: 4px; margin-left : 1cm; margin-right : 2cm }
 .code { color : #465F91 ; }
-h1 { font-size : 20pt ; 
-     margin-top: 20pt; 
+h1 { font-size : 20pt ;
+     margin-top: 20pt;
      margin-bottom: 15t;
-     text-align: center; 
+     text-align: center;
      padding: 5px;
      border: 1px solid #000000;
    }
-h2 { font-size : 20pt ; 
-     margin-top: 20pt; 
+h2 { font-size : 20pt ;
+     margin-top: 20pt;
      margin-bottom: 8pt;
-     text-align: left; 
+     text-align: left;
      padding: 2px;
      margin-left: 1cm;
      border-bottom: 1px solid #777777;
    }
-h3 { font-size : 16pt ; 
-     margin-top: 20pt; 
+h3 { font-size : 16pt ;
+     margin-top: 20pt;
      margin-bottom: 8pt;
-     text-align: left; 
+     text-align: left;
      padding: 2px;
      padding-left: 1cm;
    }
-h4 { font-size : 12pt ; 
-     margin-top: 12pt; 
+h4 { font-size : 12pt ;
+     margin-top: 12pt;
      margin-bottom: 6pt;
-     text-align: left; 
+     text-align: left;
      padding: 2px;
    }
 h5 { font-size : 20pt ; border: 1px solid #000000; margin-top: 5px; margin-bottom: 2px;text-align: center; background-color: #90FDFF ;padding: 2px; }

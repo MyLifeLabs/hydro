@@ -7,19 +7,19 @@
 CFG=invokeC - Win32 Debug
 !MESSAGE This is not a valid makefile. To build this project using NMAKE,
 !MESSAGE use the Export Makefile command and run
-!MESSAGE 
+!MESSAGE
 !MESSAGE NMAKE /f "invokeC.mak".
-!MESSAGE 
+!MESSAGE
 !MESSAGE You can specify a configuration when running NMAKE
 !MESSAGE by defining the macro CFG on the command line. For example:
-!MESSAGE 
+!MESSAGE
 !MESSAGE NMAKE /f "invokeC.mak" CFG="invokeC - Win32 Debug"
-!MESSAGE 
+!MESSAGE
 !MESSAGE Possible choices for configuration are:
-!MESSAGE 
+!MESSAGE
 !MESSAGE "invokeC - Win32 Release" (based on "Win32 (x86) Console Application")
 !MESSAGE "invokeC - Win32 Debug" (based on "Win32 (x86) Console Application")
-!MESSAGE 
+!MESSAGE
 
 # Begin Project
 # PROP AllowPerConfigDependencies 0
@@ -80,7 +80,7 @@ LINK32=link.exe
 # ADD LINK32 Iced.lib IceUtild.lib setargv.obj /nologo /subsystem:console /debug /machine:I386 /out:"client.exe" /pdbtype:sept /libpath:"../../../lib" /FIXED:no
 # SUBTRACT LINK32 /pdb:none
 
-!ENDIF 
+!ENDIF
 
 # Begin Target
 
@@ -115,7 +115,7 @@ SOURCE=.\Printer.ice
 
 !IF  "$(CFG)" == "invokeC - Win32 Release"
 
-USERDEP__PRINT="..\..\..\bin\slice2cpp.exe"	"..\..\..\lib\slice.lib"	
+USERDEP__PRINT="..\..\..\bin\slice2cpp.exe"	"..\..\..\lib\slice.lib"
 # Begin Custom Build
 InputPath=.\Printer.ice
 
@@ -131,7 +131,7 @@ BuildCmds= \
 
 !ELSEIF  "$(CFG)" == "invokeC - Win32 Debug"
 
-USERDEP__PRINT="..\..\..\bin\slice2cpp.exe"	"..\..\..\lib\sliced.lib"	
+USERDEP__PRINT="..\..\..\bin\slice2cpp.exe"	"..\..\..\lib\sliced.lib"
 # Begin Custom Build
 InputPath=.\Printer.ice
 
@@ -145,7 +145,7 @@ BuildCmds= \
    $(BuildCmds)
 # End Custom Build
 
-!ENDIF 
+!ENDIF
 
 # End Source File
 # End Group

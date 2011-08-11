@@ -106,7 +106,7 @@ There are five types that play a role:
   This function may fail at runtime with [Invalid_coercion] if this
   is not possible.
 - [Hydro_types.sliced_value] (synonymous to [Hydro_lm.sliced_base])
-  is an even smaller supertype of all transferrable objects. 
+  is an even smaller supertype of all transferrable objects.
   In contrast to [object_base] coercions are not supported.
 
 If you only want to create a pure data object, you can simply

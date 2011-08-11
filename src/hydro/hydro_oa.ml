@@ -2,7 +2,7 @@ open Hydro_types
 
 
 exception Identity_exists of identity
-exception Object_exists of Hydro_lm.interface_base 
+exception Object_exists of Hydro_lm.interface_base
 
 
 class type object_adapter_t =
@@ -29,7 +29,7 @@ class object_adapter() : object_adapter_t =
 object(self)
   val mutable adapter_id = None
   val mutable replica_group_id = None
-  
+
   method add id obj =
     let id_name = id#name in
     let id_cat = id#category in

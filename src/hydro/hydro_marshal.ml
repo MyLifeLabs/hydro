@@ -136,7 +136,7 @@ let marshal_sequence m b seq =
 let marshal_dictionary m1 m2 b seq =
   print_size b (Array.length seq);
   Array.iter
-    (fun (v1,v2) -> 
+    (fun (v1,v2) ->
        m1 b v1;
        m2 b v2
     )
@@ -152,7 +152,7 @@ let marshal_enum n b k =
       print_short b k
     else
       print_int b k
-	
+
 
 type marshal_env =
     { cmap : (int, string * object_value * int) Hashtbl.t;
@@ -189,7 +189,7 @@ let rec marshal_value env (sys:system) ht b v =
 	)
     | VBool flag ->
 	( match ht with
-	    | TBool -> 
+	    | TBool ->
 		print_bool b flag
 	    | TDirectMapping(ht',_,_) ->
 		marshal_value  env sys ht' b v
@@ -197,7 +197,7 @@ let rec marshal_value env (sys:system) ht b v =
 	)
     | VByte n ->
 	( match ht with
-	    | TByte -> 
+	    | TByte ->
 		print_byte b n
 	    | TDirectMapping(ht',_,_) ->
 		marshal_value  env sys ht' b v
@@ -317,7 +317,7 @@ let rec marshal_value env (sys:system) ht b v =
 		marshal_class env sys cname cvalref b
 	    | TDirectMapping(ht',_,_) ->
 		marshal_value  env sys ht' b v
-	    | _ -> 
+	    | _ ->
 		e_marshal()
 	)
     | VProxy p ->
@@ -339,7 +339,7 @@ let rec marshal_value env (sys:system) ht b v =
 		print_size b 0   (* empty category *)
 	    | TDirectMapping(ht',_,_) ->
 		marshal_value  env sys ht' b v
-	    | _ -> 
+	    | _ ->
 		e_marshal()
 	)
     | VDirectMapping e ->
@@ -450,7 +450,7 @@ and marshal_proxy env (sys:system) name p b =
 		       env.em
 		 | `Unknown(n,s) ->
 		     print_short b n;
-		     encapsulate 
+		     encapsulate
 		       (fun b _ -> Netbuffer.add_string b s) b env.em
 	    )
 	    eps;
@@ -462,7 +462,7 @@ and marshal_proxy env (sys:system) name p b =
 	  print_size b (String.length s);
 	  Netbuffer.add_string b s
   )
-    
+
 
 
 let marshal_type_id env type_id b =
@@ -484,7 +484,7 @@ let marshal_class_val env sys cname cval inst_id b =
     try CiHashtbl.find sys#classes cname
     with Not_found -> raise(Marshal_error("Class not found: " ^ cname)) in
   print_int b inst_id;
-  
+
   (* Iterate over the slices: *)
   let slices = ref (List.rev (cval#hydro_slices)) in
   let next_class = ref (Some cdef) in
@@ -499,7 +499,7 @@ let marshal_class_val env sys cname cval inst_id b =
    		   marshal_type_id env type_id b;
 		   let p = Netbuffer.length b in
 		   Netbuffer.add_string b "\000\000\000\000";
-		   marshal_value 
+		   marshal_value
 		     env sys (TStruct next_cdef#elements) b (VStruct sval);
 		   let p' = Netbuffer.length b in
 		   let delta = encoded_int (p' - p) in
@@ -533,11 +533,11 @@ let marshal_class_appendix env sys b =
   while not (Queue.is_empty env.cq) do
     let n = Queue.length env.cq in
     print_size b n;
-    
+
     Queue.transfer env.cq cq';
     while not (Queue.is_empty cq') do
       let id = Queue.pop cq' in
-      let (cname, cval, inst_id) = 
+      let (cname, cval, inst_id) =
 	try Hashtbl.find env.cmap id with Not_found -> assert false in
       marshal_class_val env sys cname cval inst_id b;
     done
@@ -623,7 +623,7 @@ let marshal_exn sys hx (sv:sliced_value) b em =
 	     Netbuffer.add_string b type_id;
 	     let p = Netbuffer.length b in
 	     Netbuffer.add_string b "\000\000\000\000";
-	     marshal_value 
+	     marshal_value
 	       env sys (TStruct eff_x#elements) b (VStruct sval);
 	     let p' = Netbuffer.length b in
 	     let delta = encoded_int (p' - p) in
@@ -687,7 +687,7 @@ let marshal_msg sys zstatus (msg:msg) pm em =
   let em = 0 in  (* We can only do version 0! *)
   match msg with
     | `Request req ->
-	let v = 
+	let v =
 	  VStruct [| VInt32 req#request_id;
 		     VString req#id#name;
 		     VString req#id#category;
@@ -701,7 +701,7 @@ let marshal_msg sys zstatus (msg:msg) pm em =
 			      | `Nonmutating -> 1
 			      | `Idempotent -> 2
 			   );
-		     VDictionary (Array.map 
+		     VDictionary (Array.map
 				    (fun (k,v) -> (VString k, VString v))
 				    req#context
 				 );
@@ -722,10 +722,10 @@ let marshal_msg sys zstatus (msg:msg) pm em =
 	    (List.map
 	       (fun req ->
 		  let dict =
-		    Array.map 
+		    Array.map
 		      (fun (k,v) -> (VString k, VString v))
 		      req#context in
-		  let v = 
+		  let v =
 		    VStruct [| VString req#id#name;
 			       VString req#id#category;
 			       VSequence ( match req#facet with
@@ -748,8 +748,8 @@ let marshal_msg sys zstatus (msg:msg) pm em =
 	       )
 	       reqs
 	    ) in
-	let eb0 = { encap_buf = b0; 
-		    encap_pos = 0; 
+	let eb0 = { encap_buf = b0;
+		    encap_pos = 0;
 		    encap_len = Netbuffer.length b0;
 		    encap_enc_minor = em
 		  } in
@@ -763,7 +763,7 @@ let marshal_msg sys zstatus (msg:msg) pm em =
 	(hdr, all_bufs)
 
     | `Reply rpy ->
-	let v = 
+	let v =
 	  VStruct [| VInt32 rpy#request_id;
 		     VByte (match rpy#result with
 			      | `Success _ -> 0
@@ -780,7 +780,7 @@ let marshal_msg sys zstatus (msg:msg) pm em =
 	marshal sys t_msg_reply false v b1 em;
 	let eb2_opt =
 	  match rpy#result with
-	    | `Success eb2 
+	    | `Success eb2
 	    | `User_exception eb2 ->
 		Some eb2
  	  (* The Ice manual says there is always an encapsulation.
@@ -800,7 +800,7 @@ let marshal_msg sys zstatus (msg:msg) pm em =
 				|] in
 		marshal sys t_msg_reply_error false e b1 em;
 		None
-	    | `Unknown_local_exception s 
+	    | `Unknown_local_exception s
 	    | `Unknown_user_exception s
 	    | `Unknown_exception s ->
 		marshal sys TString false (VString s) b1 em;
@@ -813,7 +813,7 @@ let marshal_msg sys zstatus (msg:msg) pm em =
 		let hdr = make_header zstatus `Reply total_len pm em in
 		(hdr, [ eb1; eb2 ])
 	    | None ->
-		let eb1 = 
+		let eb1 =
 		  { encap_buf = b1;
 		    encap_pos = 0;
 		    encap_len = Netbuffer.length b1;

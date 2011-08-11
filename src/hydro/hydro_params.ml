@@ -9,8 +9,8 @@ let default_exception_handler =
   )
 
 
-let client_params 
-      ?(trans_timeout = -1.0) 
+let client_params
+      ?(trans_timeout = -1.0)
       ?(msg_timeout = -1.0)
       ?(idle_timeout = -1.0)
       ?(exception_handler = default_exception_handler)
@@ -37,7 +37,7 @@ let upd m x =
 
 
 let update_client_params
-      ?trans_timeout ?msg_timeout ?idle_timeout ?exception_handler 
+      ?trans_timeout ?msg_timeout ?idle_timeout ?exception_handler
       ?max_proto_minor ?max_enc_minor cp =
   let eff_trans_timeout = upd trans_timeout cp#trans_timeout in
   let eff_msg_timeout = upd msg_timeout cp#msg_timeout in
@@ -135,8 +135,8 @@ let client_params_cmp (cl_params1:client_params)
 				  Oo.id cl_params2#exception_handler))))))))))
 
 
-let server_params 
-      ?(trans_timeout = -1.0) 
+let server_params
+      ?(trans_timeout = -1.0)
       () : server_params =
   ( object
       method trans_timeout = trans_timeout

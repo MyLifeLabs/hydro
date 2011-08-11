@@ -20,7 +20,7 @@ let main() =
   if !debug then
     Hydro_dbg.set_debug_log prerr_endline;
 
-  let parallelizer = Netplex_mp.mp() in  
+  let parallelizer = Netplex_mp.mp() in
 
   Netplex_main.startup
     parallelizer
@@ -32,4 +32,4 @@ let main() =
 
 let () =
   main()
-  
+

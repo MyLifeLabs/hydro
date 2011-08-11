@@ -56,10 +56,10 @@ let main() =
   let sys = Hydro_lm.create_system() in
   Hello.fill_system sys;    (* Generated! *)
 
-  let id = ( object 
+  let id = ( object
 	       method name = "MySingleGreeter"
 	       method category = ""
-	     end 
+	     end
 	   ) in
   (* The id of the ICE object *)
 
@@ -87,7 +87,7 @@ let main() =
 	     )
       () in
 
-  let parallelizer = Netplex_mp.mp() in  
+  let parallelizer = Netplex_mp.mp() in
   (* Multi-processing. Note that multi-threading is currently not
      supported by Hydro!
    *)

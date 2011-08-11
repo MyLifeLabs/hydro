@@ -3,14 +3,14 @@
 open Netplex_types
 
 val hydro_factory :
-      configure:(config_file -> address -> 
+      configure:(config_file -> address ->
 		   Hydro_oa.object_adapter_t array -> 'a) ->
       ?adapters:int ->
       ?hooks:(Hydro_oa.object_adapter_t array -> 'a -> processor_hooks) ->
       ?supported_ptypes:parallelization_type list ->
-      ?setup:(Netplex_types.container -> Hydro_endpoint.Server.t -> 
+      ?setup:(Netplex_types.container -> Hydro_endpoint.Server.t ->
 		Hydro_oa.object_adapter_t array -> 'a -> unit) ->
-      ?register_at:Hydro_builtin.pr_Ice_Locator -> 
+      ?register_at:Hydro_builtin.pr_Ice_Locator ->
       ?server_params:Hydro_types.server_params ->
       name:string ->
       sys:Hydro_types.system ->
@@ -26,11 +26,11 @@ val hydro_factory :
     *    }
     * ]}
     *
-    * Some other parameters in the [processor] section are also interpreted 
+    * Some other parameters in the [processor] section are also interpreted
     * by the factory, see below. In general, however, the parameters and
     * subsections are defined by the user. These
     * parameters should be parsed and checked for correctness by the
-    * [configure] callback. The result of [configure] is also passed 
+    * [configure] callback. The result of [configure] is also passed
     * to [setup] and other optional functions. The [configure] function is
     * called just before the service is
     * added to Netplex (i.e. from the controller context).
@@ -44,7 +44,7 @@ val hydro_factory :
     * The {!Hydro_endpoint.Server.t} structure is created every time a new connection
     * is accepted. Of course, this is done from the context of the container.
     * This structure is created with as many object adapters as the [adapters]
-    * argument says (which defaults to 0); the user can bind additional 
+    * argument says (which defaults to 0); the user can bind additional
     * adapters in the [setup] function. This is achieved by calling
     * [Hydro_endpoint.Server.bind_adapter].
     *
@@ -106,16 +106,16 @@ val hydro_factory :
     * config file, and for configuring the adapters in the array. The
     * return value is passed to the [hooks] and [setup] invocation.
     * If not needed, return [()]. The [configure] function is only called
-    * once in the controller context for every [processor] section 
+    * once in the controller context for every [processor] section
     * referring to this factory.
     *
     * @param adapters The size of the adapter array. Defaults to 0.
-    * 
+    *
     * @param hooks An optional function returning the hooks to call.
     * See [Netplex_types.processor_hooks] for documentation.
     *
     * @param supported_ptypes Which parallelization types are supported
-    * by the service. By default, only multi-processing 
+    * by the service. By default, only multi-processing
     * is included in this list (Hydro still lacks multi-threading support).
     *
     * @param setup Function for setting up server details. It is called
@@ -138,7 +138,7 @@ to do this. For permanent objects that are available throughout the lifetime
 of the service the answer is easy: Just add the objects in the [configure]
 callback, e.g.
 
-{[ 
+{[
     Hydro_netplex.hydro_factor
       ...
       ~adapters:1
@@ -154,17 +154,17 @@ context, i.e. before subprocesses are forked off.
 
 When objects have to be added later, things get complicated, because
 [aa] exists independently in every subprocess. There is no really good
-solution yet to broadcast changes from one subprocess to the others, 
+solution yet to broadcast changes from one subprocess to the others,
 so it is strongly recommended to consider changes of [aa] only if there
 is exactly one subprocess (i.e. use a constant workload manager with
-1 process). 
+1 process).
 
 In this case it is possible to pass [aa] down, and to modify it later.
 For instance, here one initial object [obj1] is added, and later a second
 object [obj2]:
 
 
-{[ 
+{[
     class class1 aa =
     object
       inherit skel_Obj1
@@ -189,7 +189,7 @@ object [obj2]:
       ()
 ]}
 
-Note that it is also possible to do the initial addition of objects in the 
+Note that it is also possible to do the initial addition of objects in the
 [post_start_hook]. This may be advantegeous when the objects consume a lot
 memory, and it should be avoided that the memory is duplicated by forking,
 or when database handles or other descriptors must not be duplicated.

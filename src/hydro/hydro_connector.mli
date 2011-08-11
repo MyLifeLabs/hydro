@@ -11,7 +11,7 @@ object
   inherit descriptor
   method ctrl : Hydro_transport.hydro_multiplex_controller
 end
-    (** This is a multiplexed connection, used for both clients and 
+    (** This is a multiplexed connection, used for both clients and
         servers
      *)
 
@@ -26,8 +26,8 @@ val client_endpoint_type : client_connector -> endpoint_type
 
 
 type master_connector =
-    [ `Anon_endpoint_IPv4 of endpoint_type 
-    | `Anon_endpoint_IPv6 of endpoint_type 
+    [ `Anon_endpoint_IPv4 of endpoint_type
+    | `Anon_endpoint_IPv6 of endpoint_type
     | `Named_endpoint of Unix.sockaddr * endpoint_type
     ]
 
@@ -41,8 +41,8 @@ object
 
   method proxy_modes : proxy_mode list
     (** Supported proxy modes *)
-                                    
-  method client_connect_engine : client_connector -> 
+
+  method client_connect_engine : client_connector ->
                                  Unixqueue.event_system ->
                                    multiplexed_descriptor Uq_engines.engine
   (** An engine that is able to create and, if requested, to connect the socket
@@ -57,7 +57,7 @@ object
   (** Get the multiplexed connection for an  existing server connection
    *)
 
-  method server_create_engine : master_connector -> 
+  method server_create_engine : master_connector ->
                                 Unixqueue.event_system ->
                                   descriptor Uq_engines.engine
   (** Creates a server socket. For stream sockets, a master descriptor is
@@ -87,7 +87,7 @@ val get_transporter : endpoint_type -> transporter
 val descriptor : Unix.file_descr -> bool -> transport_protocol_type -> descriptor
   (** [descriptor fd is_master tpt]: Create a hydro descriptor *)
 
-val tcp_endpoint_of_file_descr : Unix.sockaddr -> float -> bool -> 
+val tcp_endpoint_of_file_descr : Unix.sockaddr -> float -> bool ->
                                    tcp_endpoint
   (** Returns the TCP endpoint for the TCP address, the timeout
       value, and the compression flag.

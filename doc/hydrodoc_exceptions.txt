@@ -31,7 +31,7 @@ sense, and represented differently in client and server code.
   Slice file (e.g. "[exception Foo { string message; }]"). The
   Hydro runtime deals with these exception only in a very
   inconvenient way: Client code will get a
-  {!Hydro_types.Client_condition} with a [`User_exception] 
+  {!Hydro_types.Client_condition} with a [`User_exception]
   parameter when it is tried to read a result value from an
   invocation of a remote operation that has thrown an exception.
   The parameter is not language-mapped. Server code can send
@@ -41,9 +41,9 @@ sense, and represented differently in client and server code.
   [hydrogen] generates special code that translates such exceptions
   for both clients and servers to easy O'Caml types. See below
   for more about this.
-- {b Unknown user exception:} Operations of ICE objects must 
+- {b Unknown user exception:} Operations of ICE objects must
   declare which user exceptions can be thrown ([throws] clause).
-  If the implementation does not stick to the declaration, and 
+  If the implementation does not stick to the declaration, and
   throws different exceptions, these user exceptions are converted
   to unknown user exceptions by the server. Client code will get
   a {!Hydro_types.Client_condition} with an [`Unknown_user_exception]
@@ -72,7 +72,7 @@ sense, and represented differently in client and server code.
   operation that does not match one of the above types,
   the exception is send as unknown one. Client code will get a
   {!Hydro_types.Client_condition} with an [`Unknown_exception]
-  parameter. Server code can invoke the [emit_unknown_exception] 
+  parameter. Server code can invoke the [emit_unknown_exception]
   method of the {!Hydro_types.session} object.
 
 
@@ -146,7 +146,7 @@ analyze it:
 - [exn_id] is the ICE type ID of the exception type
 - [is_<name>] tests whether an exception is of the corresponding type
   or subtype. For example, an [Y] exception is a sub exception of
-  [X], and this means that for every instance of [Y] the [is_X] 
+  [X], and this means that for every instance of [Y] the [is_X]
   method will return [true]
 - [as_<name>] coerces the given exception to another exception type.
   The coercion succeeds if the runtime type is a subtype of the
@@ -274,7 +274,7 @@ much simpler, as the implementation looks like
 
 Here, [parachute] is the generated protection function that ensures
 that the method always returns a result or an exception (in other
-words that it is synchrounous). Within the part denoted by "..." 
+words that it is synchrounous). Within the part denoted by "..."
 you can safely
 
 - raise [User_exception] to jump immediately out of the computation
@@ -294,7 +294,7 @@ Using a [parachute] is strongly recommended.
 Now to the second, asynchronous case. It is useful if you want to
 accept the operation invocation, but wait some time until the response
 is sent. Of cource, the [parachute] is generally not applicable here,
-so we have to look for other means of passing exceptions. The 
+so we have to look for other means of passing exceptions. The
 implementation looks now like
 
 {[
@@ -319,7 +319,7 @@ In the "..." part, or anytime later you can
 - emit a user exception by calling [emit_user_exception]. This
   function takes a [user_exception] object.
 - emit another transmissible exception by calling one of the
-  methods of the [session] object (which is a 
+  methods of the [session] object (which is a
   {!Hydro_types.session}), for example [session#emit_unknown_exception].
 
 Any of the "emit" functions or methods triggers that the response
@@ -351,11 +351,11 @@ invocations. If you want to avoid it, we recommend to define a
 GC finaliser like
 
 {[
-  Gc.finalise 
-    (fun s -> 
+  Gc.finalise
+    (fun s ->
       if not s#is_responded then
          prerr_endline "Forgot to respond!"
-    ) 
+    )
     session
 ]}
 

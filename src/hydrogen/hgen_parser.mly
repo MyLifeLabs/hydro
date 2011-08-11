@@ -10,7 +10,7 @@
 %token<Hgen_types.loc> K_INTERFACE K_OUT K_TRUE K_CONST K_FALSE K_LOCAL
 %token<Hgen_types.loc> K_SEQUENCE K_VOID K_DICTIONARY K_SHORT
 %token<Hgen_types.loc> K_DOUBLE K_IDEMPOTENT K_LONG K_STRING K_INT K_FLOAT
- 
+
 /* Other tokens */
 
 %token<string * Hgen_types.loc> IDENT
@@ -34,12 +34,12 @@ start: defs EOF { $1 }
 /* Global definitions                                                 */
 /**********************************************************************/
 
-defs: 
+defs:
   global_meta_data defs
     { (`GMeta $1) :: $2 }
 | def SEMI defs
     { $1 :: $3 }
-| 
+|
     { [] }
 
 def:
@@ -65,7 +65,7 @@ def:
 	)
     }
 | meta_data_opt local_flag K_INTERFACE IDENT intf_def_opt
-   { `Intf 
+   { `Intf
        ( object
 	   method name = fst $4
 	   method meta = $1
@@ -99,7 +99,7 @@ def:
    }
 | meta_data_opt local_flag K_SEQUENCE LANGLE typ RANGLE IDENT
    { let (arg_typ, arg_meta) = $5 in
-     `Seq 
+     `Seq
        ( object
 	   method name = fst $7
 	   method arg_typ = arg_typ
@@ -113,7 +113,7 @@ def:
 | meta_data_opt local_flag K_DICTIONARY LANGLE typ COMMA typ RANGLE IDENT
   { let (arg_typ1, arg_meta1) = $5 in
     let (arg_typ2, arg_meta2) = $7 in
-    `Dict 
+    `Dict
        ( object
 	   method name = fst $9
 	   method arg_typ1 = arg_typ1
@@ -127,7 +127,7 @@ def:
        )
   }
 | meta_data_opt local_flag K_ENUM IDENT LBRACE enum_list RBRACE
-   { `Enum 
+   { `Enum
        ( object
 	   method name = fst $4
 	   method meta = $1
@@ -168,7 +168,7 @@ class_def_opt:
 	 (List.map
 	    (function `Operation m -> [m] | _ -> [])
 	    members) in
-     Some 
+     Some
        ( object
 	   method extends = $1
 	   method implements = $2
@@ -195,9 +195,9 @@ implements_clause_opt:
 class_members:
   class_member class_members
     { $1 :: $2 }
-| 
+|
     { [] }
-  
+
 class_member:
   data_or_operation_member
     { $1 }
@@ -234,7 +234,7 @@ intf_extends_clause_opt:
 intf_members:
   operation_member intf_members
     { $1 :: $2 }
-| 
+|
     { [] }
 
 /**********************************************************************/
@@ -256,7 +256,7 @@ exn_def_opt:
 exn_members:
   data_member exn_members
     { $1 :: $2 }
-| 
+|
     { [] }
 
 /**********************************************************************/
@@ -277,7 +277,7 @@ struct_def_opt:
 struct_members:
   data_member struct_members
     { $1 :: $2 }
-| 
+|
     { [] }
 
 /**********************************************************************/
@@ -303,7 +303,7 @@ data_member:
 	  method meta = meta
 	  method loc = snd $2
 	end : data_member
-      ) 
+      )
     }
 
 operation_member:
@@ -318,7 +318,7 @@ operation_member:
 	  method idempotent = idempotent
 	  method loc = snd $2
 	end : operation
-      ) 
+      )
     }
 
 data_or_operation_member:
@@ -333,7 +333,7 @@ data_or_operation_member:
 			   method meta = meta
 			   method loc = snd $2
 			 end : data_member
-			) 
+			)
 	| Some (params, throws) ->
 	    `Operation( object
 			  method name = fst $2
@@ -344,7 +344,7 @@ data_or_operation_member:
 			  method idempotent = idempotent
 			  method loc = snd $2
 			end : operation
-		      ) 
+		      )
     }
 
 data_or_operation_cont:
@@ -440,7 +440,7 @@ idempotent_flag:
 meta_data_opt:
   LBRACK string_list RBRACK
     { List.map Hgen_parser_util.parse_meta_def $2 }
-| 
+|
     { [] }
 
 global_meta_data:
@@ -456,7 +456,7 @@ string_list:
 string_lit:
   STRING_LITERAL string_lit
     { let (s, _, _) = $1 in s ^ $2 }
-| STRING_LITERAL 
+| STRING_LITERAL
     { let (s, _, _) = $1 in s }
 
 local_flag:

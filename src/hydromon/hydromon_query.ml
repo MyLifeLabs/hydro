@@ -23,11 +23,11 @@ let ignoring_handler : Hydro_types.exn_handler =
   )
 
 
-let create_cache ~port ~period () = 
+let create_cache ~port ~period () =
   let esys = Unixqueue.create_unix_event_system() in
   let sys = Hydro_lm.create_system() in
   fill_system sys;
-  let cp = 
+  let cp =
     Hydro_params.client_params
       ~msg_timeout:5.0           (* that has to be quick *)
       ~exception_handler:ignoring_handler
@@ -35,7 +35,7 @@ let create_cache ~port ~period () =
   let res = Hydro_proxy.proxy_resolver cp in
   let pool = Hydro_proxy.pool() in
   let pconf = Hydro_proxy.proxy_conf() in
-  let pe = 
+  let pe =
     ( object
 	method event_system = esys
 	method system = sys
@@ -63,14 +63,14 @@ let get_shm cache name =
 	let st = Unix.fstat fd in
 	let size = st.Unix.st_size in
 	let shm =
-	  Bigarray.Array1.map_file 
+	  Bigarray.Array1.map_file
 	    fd Bigarray.char Bigarray.c_layout true size in
 	Unix.close fd;
 	cache.shm_opt <- Some shm;
 	shm
 
 
-let check_key ~cache ~key ~operation ~idempotent () = 
+let check_key ~cache ~key ~operation ~idempotent () =
   (* First check whether we have that object in our cache *)
   let now = Int64.of_float (Unix.time()) in
   try
@@ -94,7 +94,7 @@ let check_key ~cache ~key ~operation ~idempotent () =
 	    let t = Int64.add now (Int64.of_int cache.period) in
 	    let target_pr = pr_of_key key in
 	    let monobj =
-	      ( cache.proxy # requestMonitoring 
+	      ( cache.proxy # requestMonitoring
 		  (Some target_pr) operation idempotent t
 	      ) # scall # result in
 	    cache.proxy # hydro_env # client_pool # shutdown();
@@ -106,8 +106,8 @@ let check_key ~cache ~key ~operation ~idempotent () =
 		    | `Hydro_TooManyMonitoredObjects ->
 			raise (No_result "Too many monitored objects")
 		    | `Hydro_Error ->
-			raise (No_result 
-				 ("Error: " ^ 
+			raise (No_result
+				 ("Error: " ^
 				    ue # hydro_ops # as_Hydro_Error # msg))
 		)
 	    | e ->
@@ -116,7 +116,7 @@ let check_key ~cache ~key ~operation ~idempotent () =
 
 
 
-let check_object ~cache ~monobj ~operation ~idempotent () = 
+let check_object ~cache ~monobj ~operation ~idempotent () =
   let pr = Hydro_lm.pr_of_string monobj in
   let key = key_of_pr pr operation idempotent in
   check_key ~cache ~key ~operation ~idempotent ()
@@ -150,10 +150,10 @@ let proxy_monitor cache operation idempotent th d proxy mc =
 	true   (* don't know, so let's try *)
 
 
-let configure_proxy ~cache ~(proxy:Hydro_proxy.proxy_t) ~operation 
-                    ~idempotent ?(threshold=1) 
+let configure_proxy ~cache ~(proxy:Hydro_proxy.proxy_t) ~operation
+                    ~idempotent ?(threshold=1)
                     ?(deactivate=false) () =
-  proxy # hydro_set_monitor 
+  proxy # hydro_set_monitor
     (proxy_monitor cache operation idempotent threshold deactivate)
 
-  
+

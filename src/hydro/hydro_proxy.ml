@@ -12,7 +12,7 @@ type extended_proxy_addr =
 
 and extended_proxy_parameters =
     [ proxy_parameters
-    | `Connectors of 
+    | `Connectors of
 	  (Hydro_connector.client_connector * client_params) list
     ]
 
@@ -44,14 +44,14 @@ object
   method system : system
   method proxy_resolver : proxy_resolver_t
   method client_pool : pool_t
-  method default_proxy_conf : proxy_conf_t 
+  method default_proxy_conf : proxy_conf_t
 end
 
 and proxy_resolver_t =
 object
-  method resolve : 
-           extended_proxy_addr -> 
-           ((Hydro_connector.client_connector * 
+  method resolve :
+           extended_proxy_addr ->
+           ((Hydro_connector.client_connector *
 	       client_params) list Lazy.t -> unit) ->
            proxy_env_t ->
              unit
@@ -62,7 +62,7 @@ object
   method hydro_env : proxy_env_t
   method hydro_id : identity
   method hydro_facet : string option
-  method hydro_twoway_call : 
+  method hydro_twoway_call :
            hintf -> string -> value array -> call_params ->
            (Hydro_endpoint.Client.response -> unit) ->
              unit
@@ -104,7 +104,7 @@ object
   method trigger_shutdown : unit -> unit
   method abort : unit -> unit
   method reset : unit -> unit
-  method is_available : Unix.inet_addr -> network_port option -> 
+  method is_available : Unix.inet_addr -> network_port option ->
                         shared_or_private -> float -> bool
 end
 
@@ -168,16 +168,16 @@ let proxy_resolver ?(domain_resolver = default_dns_resolver) bcp =
 			 | None -> assert false
 		    )
 		    (List.filter
-		       (fun res_ref -> !res_ref <> None) 
+		       (fun res_ref -> !res_ref <> None)
 		       result_after_dns
 		    ) in
 		let result =
 		  List.map
 		    (fun (ep,conn) ->
-		       let cl_params = 
+		       let cl_params =
 			 Hydro_params.update_client_params_by_endpoint ep bcp in
 		       (conn, cl_params)
-		    ) 
+		    )
 		    resolvable_results in
 		callback (lazy result)
 	      in
@@ -188,14 +188,14 @@ let proxy_resolver ?(domain_resolver = default_dns_resolver) bcp =
 		   match host_port_opt with
 		     | Some (host,_) ->
 			 (* Have something to resolve *)
-			 domain_resolver 
+			 domain_resolver
 			   env#event_system
 			   host
 			   (fun res_opt ->
 			      decr missing;
 			      ( match res_opt with
 				  | Some addr ->
-				      out_ref := 
+				      out_ref :=
 					Some(ep,
 					     connector_of_resolved_endpoint
 					       ep addr)
@@ -216,13 +216,13 @@ let proxy_resolver ?(domain_resolver = default_dns_resolver) bcp =
 		result_after_dns
 
 	  | `Well_known | `Adapter _ ->
-	      callback 
+	      callback
 		(lazy
 		   (failwith "Hydro_proxy.proxy_resolver: Indirect proxies not supported"))
-		
+
 	  | `Connectors cl ->
 	      callback (lazy cl)
-		
+
     end : proxy_resolver_t
   )
 
@@ -266,7 +266,7 @@ let conn_cmp (conn1:Hydro_connector.client_connector)
 	( match conn2 with
 	    | `Endpoint (e2,_) ->
 		endpoint_cmp e1 e2
-		  (* CHECK: is it safe to ignore the resolved IP address in 
+		  (* CHECK: is it safe to ignore the resolved IP address in
                      the comparison?
                    *)
 	)
@@ -305,7 +305,7 @@ module SSPMap = Map.Make(SSP)
 let rec list_prefix n l =  (* Return the n elements at the beginning of l *)
   if n = 0 then
     []
-  else 
+  else
     match l with
       | [] -> []
       | x :: l' -> x :: list_prefix (n-1) l'
@@ -329,7 +329,7 @@ object(pool)
   val mutable pool_up = true
     (* Whether pool is usable *)
 
-  val mutable mclients = 
+  val mutable mclients =
     (SSPMap.empty :
        managed_client_t list ref CPMap.t ref SSPMap.t
     )
@@ -420,7 +420,7 @@ object(pool)
 		tref > t1
 	      with
 		| Not_found -> true
-      ) 
+      )
 
 
   method private new_managed_client sys c p sp =
@@ -430,7 +430,7 @@ object(pool)
 	| Some(`TCP(a,_)) | Some(`UDP(a,_)) -> Some a
 	| None -> None in
     let t0 = Unix.gettimeofday() in
-    ( object(managed_client) 
+    ( object(managed_client)
 	val mutable mc_state = `Unused_since t0
 	val mutable mc_incarnation = 0
 	val mutable mc_error_info = None
@@ -463,7 +463,7 @@ object(pool)
 	method private drop() =
 	  let t = Unix.gettimeofday() in
 	  mc_state <- `Unused_since t
-		
+
 	method client_incarnation =
 	  mc_incarnation
 
@@ -472,18 +472,18 @@ object(pool)
 	  ( match mc_state with
 	      | `Deactivated_until t ->
 		  tref > t
-	      | _ -> 
+	      | _ ->
 		  true
-	  ) && 
+	  ) &&
 	    ( match host_opt with
 		| None -> true
 		| Some host ->
 		    pool # is_available host port_opt sp tref
 	    )
 
-	method deactivate duration = 
+	method deactivate duration =
 	  if duration <> 0.0 then (
-	    let t1 = 
+	    let t1 =
 	      if duration < 0.0 then
 		infinity
 	      else
@@ -527,7 +527,7 @@ object(pool)
 		let now = Unix.gettimeofday() in
 	  	if now > t then
 		  0
-		else 
+		else
 		  n
 
 	method trigger_shutdown ?ondown () =
@@ -552,10 +552,10 @@ object(pool)
 
       end : managed_client_t
     )
-    
+
   method deactivate_host host duration =
     if duration <> 0.0 then (
-      let t1 = 
+      let t1 =
 	if duration < 0.0 then
 	  infinity
 	else
@@ -567,13 +567,13 @@ object(pool)
       let tmax = max t1 t1' in
       deactivated_hosts <- (host, tmax) :: l;
       if dlog_enabled() then
-	dlogf "Hydro_proxy: deactivating host %s until %f" 
+	dlogf "Hydro_proxy: deactivating host %s until %f"
 	  (Unix.string_of_inet_addr host) tmax
     )
 
   method deactivate_port port duration =
     if duration <> 0.0 then (
-      let t1 = 
+      let t1 =
 	if duration < 0.0 then
 	  infinity
 	else
@@ -585,11 +585,11 @@ object(pool)
       let tmax = max t1 t1' in
       deactivated_ports <- (port, tmax) :: l;
       if dlog_enabled() then
-	dlogf "Hydro_proxy: deactivating port %s until %f" 
+	dlogf "Hydro_proxy: deactivating port %s until %f"
 	  (match port with
-	     | `TCP(h,n) -> 
+	     | `TCP(h,n) ->
 		 Printf.sprintf "%s:%d/tcp" (Unix.string_of_inet_addr h) n
-	     | `UDP(h,n) -> 
+	     | `UDP(h,n) ->
 		 Printf.sprintf "%s:%d/udp" (Unix.string_of_inet_addr h) n
 	  )
 	  tmax
@@ -607,7 +607,7 @@ object(pool)
 	     (fun cp l ->
 		let l' =
 		  List.filter
-		    (fun mc -> 
+		    (fun mc ->
 		       match mc#unused_since with
 			 | None -> true
 			 | Some t -> t < t_last_gc
@@ -674,7 +674,7 @@ object(pool)
 
 
   method reset() =
-    if dlog_enabled() then 
+    if dlog_enabled() then
       dlogf "Hydro_proxy: resetting pool";
     if not pool_up then
       failwith "Hydro_pool.reset: cannot reset while shutdown is in progress";
@@ -795,7 +795,7 @@ let find_available_client ring t max_rounds_opt mon =
     let mc_avail = ref (!mc # available t && mon !mc) in
     let n = ref 0 in
     let l = Ring.length ring in
-    while 
+    while
       not !mc_avail &&                   (* mc does not qualify *)
       !n < l                             (* at most do one round now *)
     do
@@ -805,7 +805,7 @@ let find_available_client ring t max_rounds_opt mon =
       incr n;
       (* Check whether maximum number of rounds exceeded: *)
       match max_rounds_opt with
-	| Some max_rounds -> 
+	| Some max_rounds ->
 	    if Ring.round ring >= max_rounds then ( n:= l; mc_avail := false )
 	| None -> ()
     done;
@@ -906,8 +906,8 @@ object(self)
 	    Queue.push callback client_callbacks;
 	    let pool = env#client_pool in
 	    let sys = env#system in
-	    let sp = 
-	      if proxy_conf#shared_connections then 
+	    let sp =
+	      if proxy_conf#shared_connections then
 		`Shared
 	      else
 		`Private (self : #proxy_t :> < > ) in
@@ -935,7 +935,7 @@ object(self)
 			   true
 			 ) in
 		       if success then (
-			 let mclients = 
+			 let mclients =
 			   pool # request_clients sys sp multi res in
 			 let ring = Ring.create mclients in
 			 resolution <- Some (res, ring, switch_flag, t);
@@ -946,7 +946,7 @@ object(self)
 		     with
 		       | err ->
 			   if dlog_enabled() then
-			     dlogf 
+			     dlogf
 			       "Hydro_proxy: hydro_client 6: resolution fails: %s"
 			       (Hydro_util.exn_to_string err);
 			   ( match err with
@@ -1004,7 +1004,7 @@ object(self)
 
     self # hydro_client
       (fun r_lz ->
-	 let r_opt = 
+	 let r_opt =
 	   try
 	     Some(Lazy.force r_lz)
 	   with
@@ -1027,7 +1027,7 @@ object(self)
 	       let call_ring = Ring.copy ring in
 
 	       (* If switch_flag is set, we advance [ring] to the next
-                  available client. 
+                  available client.
                 *)
 	       if switch_flag then (
 		 if dlog_enabled() then
@@ -1041,11 +1041,11 @@ object(self)
 	       (* Maximum number of rounds in [call_ring] *)
 	       let mr = max 1 (proxy_conf#max_reconnections + 1) in
 
-	       self # hydro_twoway_ring_call 
+	       self # hydro_twoway_ring_call
 		 intf name args params cb call_ring mr
       )
 
-		 
+
   method private hydro_twoway_ring_call intf name args params cb call_ring mr =
     let on_connect_error mc is_last_round =
       if dlog_enabled() then
@@ -1084,7 +1084,7 @@ object(self)
 
     if dlog_enabled() then
       dlogf "Hydro_proxy: hydro_twoway_ring_call name=%s ring.index=%d ring.round=%d" name (Ring.index call_ring) (Ring.round call_ring);
-    
+
     let now = Unix.gettimeofday() in
     (* Check whether the ring head is an available client. If not, switch
        to the next available client. Return [None] if no client can be
@@ -1097,7 +1097,7 @@ object(self)
 	  if dlog_enabled() then
 	    dlogf "Hydro_proxy: Using managed client %d incarnation %d"
 	      (Oo.id mc) mc#client_incarnation;
-	  let is_last_round = 
+	  let is_last_round =
 	    Ring.round call_ring + 1 >= mr in
 	  Hydro_endpoint.Client.twoway_call
 	    ?facet:addr#facet
@@ -1107,7 +1107,7 @@ object(self)
 	    name
 	    params
 	    args
-	    (fun resp -> 
+	    (fun resp ->
 	       match resp#condition with
 		 | `Success
 		 | `User_exception _
@@ -1133,7 +1133,7 @@ object(self)
 		       (* These conditions indicate that the connection
                           could not be established
 			*)
-		       
+
 		 | `Error e when not (internal_error e) ->
 		     on_hard_error mc resp is_last_round
 		 | `Message_lost true
@@ -1161,7 +1161,7 @@ let proxy = new proxy
 
 let proxy_conf
       ?(shared_connections=true)
-      ?(multiplicity=`Failover) 
+      ?(multiplicity=`Failover)
       ?(max_reconnections = 2)
       ?(deactivation_period = 60.0)
       ?(resolution_period = 300.0)

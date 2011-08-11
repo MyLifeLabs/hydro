@@ -217,7 +217,7 @@ let identity =
 let call name args =
   let client =
     Hydro_client.create system conn esys in
-  let resp1 = 
+  let resp1 =
     ref None in
   Hydro_client.twoway_call
     client
@@ -247,16 +247,16 @@ let call0 name args =
   ignore(call name args);;
 
 
-let printstring s = 
+let printstring s =
   call0 "printString" [| `String s |];;
-let printstringsequence seq = 
-  call0 "printStringSequence" 
+let printstringsequence seq =
+  call0 "printStringSequence"
     [| `Sequence (Array.map (fun s -> `String s) seq) |];;
 let printdictionary dict =
   call0 "printDictionary"
-    [| `Dictionary 
+    [| `Dictionary
 	 (Array.map
-	    (fun (s,t) -> (`String s, `String t)) 
+	    (fun (s,t) -> (`String s, `String t))
 	    (Array.of_list dict)) |];;
 let map_color color =
   match color with
@@ -278,7 +278,7 @@ let printstructsequence seq =
 	    seq) |];;
 let printclass (name,value) =
   call0 "printClass"
-    [| `Class ( ref (`Value 
+    [| `Class ( ref (`Value
 		       (object
 			  method hydro_effective_id = "::Demo::C"
 			  method hydro_slices =
@@ -299,7 +299,7 @@ let getvalues () =
 	  let slices = cv#hydro_slices in
 	  ( match slices with
 	      | [ `Decoded("::Ice::Object", _);
-		  `Decoded("::Demo::C", 
+		  `Decoded("::Demo::C",
 			   [| `Struct
 				[| `String name; `Enum k |]
 			   |]);

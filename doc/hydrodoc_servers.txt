@@ -41,7 +41,7 @@ When you [hydrogen] this Slice definition, you get
     method greetingMessage : string ->
                              (rr_Greeter__greetingMessage -> unit) ->
                              (user_exception -> unit) ->
-                             Hydro_types.session -> 
+                             Hydro_types.session ->
                                unit
   end
 
@@ -50,8 +50,8 @@ When you [hydrogen] this Slice definition, you get
   val parachute :
     (Hydro_types.session -> 'r) ->
     ('r -> unit) ->
-    (user_exception -> unit) -> 
-    Hydro_types.session -> 
+    (user_exception -> unit) ->
+    Hydro_types.session ->
       unit
 ]}
 
@@ -70,7 +70,7 @@ to define our servant.
 
 Note the quite complicated type of [greetingMessage]. What does it
 mean? Well, we try not to answer that directly. Instead, look at
-[parachute]. The type of this function has a lot of similarity with 
+[parachute]. The type of this function has a lot of similarity with
 the type of the operation, and actually we can use [parachute] to
 hide the complexity.
 
@@ -97,16 +97,16 @@ Then we can create the master server:
   let master = Hydro_endpoint.Master.create sys mc params esys
 ]}
 
-What we need now is the [servant] implementing the functionality 
+What we need now is the [servant] implementing the functionality
 announced in the [Greeter] interface, and the mapping from
 identities to servants. For the latter, we create a so-called
 object adapter, and add the servant under a certain identity:
 
 {[
-   let id = ( object 
+   let id = ( object
 	        method name = "MySingleGreeter"
 	        method category = ""
-	      end 
+	      end
 	    )
    let oa = Hydro_oa.object_adapter()
    oa # add id (servant :> Hydro_lm.interface_base)
@@ -141,7 +141,7 @@ is a template we only have to fill in by defining our operations:
   end
 ]}
 
-Then: 
+Then:
 
 {[
   let servant = new myGreeter
@@ -180,13 +180,13 @@ is defined by the generator like
 {[
 let rec parachute =
   (fun userfn ->
-    (fun emit_result -> 
-      (fun emit_exn -> 
-        (fun session -> 
+    (fun emit_result ->
+      (fun emit_exn ->
+        (fun session ->
           try ( emit_result (userfn session) )
           with
             | User_exception e -> emit_exn e
-            | g -> 
+            | g ->
                 session # emit_unknown_exception
                   (Hydro_util.exn_to_string g)
         )
@@ -211,12 +211,12 @@ arguments and hides them from the user. You could also write
 
 {[
 method foo arg1 arg2 ... argN emit_result emit_exn session =
-  try 
+  try
     let result = ... in
     emit_result result
   with
    | User_exception e -> emit_exn e
-   | g -> 
+   | g ->
         session # emit_unknown_exception (Hydro_util.exn_to_string g)
 ]}
 

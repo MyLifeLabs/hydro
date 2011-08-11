@@ -58,7 +58,7 @@ let print_meta_def =
     | `Global_reserve_structprefix p    -> "hydro:reserver:structprefix:" ^ p
     | `Local_equals s                   -> "hydro:equals:" ^ s
     | `Local_name s                     -> "hydro:name:" ^ s
-    | `Global_defmapping(s1,s2,s3,s4)   -> "hydro:defmapping:" ^ s1 ^ ":" ^ 
+    | `Global_defmapping(s1,s2,s3,s4)   -> "hydro:defmapping:" ^ s1 ^ ":" ^
 	                                    s2 ^ ":" ^ s3 ^ ":" ^ s4
     | `Local_mapping s                  -> "hydro:mapping:" ^ s
     | `Local_tuple                      -> "hydro:tuple"

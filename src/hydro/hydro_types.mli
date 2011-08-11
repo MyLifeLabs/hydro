@@ -66,7 +66,7 @@ exception Proxy_error of proxy_error
       - [`NoEndpointIsReachable]: None of the resolved endpoints is
         actually reachable.
       - [`NoLocatorIsReachable]: No locator (i.e. IceGrid node) is
-        actually reachable, and the resolution procedure fails because of 
+        actually reachable, and the resolution procedure fails because of
         this.
       - [`ProxyIsDown]: The proxy has been shut down
    *)
@@ -111,7 +111,7 @@ type value =
   | VLong of int64
   | VFloat of float
   | VDouble of float
-  | VString of string   
+  | VString of string
       (* the UTF8-encoded string *)
   | VSequence of value array
       (* the elements of the sequence in order *)
@@ -119,7 +119,7 @@ type value =
       (* `Sequence `Byte, represented as ocaml string *)
   | VDictionary of (value * value) array
       (* the dictionary pairs *)
-  | VEnum of int   
+  | VEnum of int
       (* the number is the position in the declaration *)
   | VStruct of value array
       (* the elements of the structure in order *)
@@ -164,8 +164,8 @@ and sliced_value =
       - [hydro_slices]: These are the slices in base-to-derived order,
         i.e. the root slice for the root of the inheritance hierarchy
         comes first, and the most derived slice comes last.
-      - [hydro_effective_id]:  The effective type ID of the class or 
-        exception. This is the most derived ID the local type system 
+      - [hydro_effective_id]:  The effective type ID of the class or
+        exception. This is the most derived ID the local type system
         knows = the latest element in [hydro_slices] with a decoded slice.
 
       This type also exists as class type {!Hydro_lm.sliced_base}.
@@ -195,7 +195,7 @@ and object_value =
       Basically this means that an [object_value] is a [sliced_value]
       that can be recovered as rich class type by the language mapping layer.
 
-      For an [object_value] that has callable operations, use 
+      For an [object_value] that has callable operations, use
       the class type {!Hydro_lm.object_base}.
    *)
 
@@ -231,7 +231,7 @@ and proxy_addr =
         in a transport-dependent form
    *)
 
-and proxy_mode = 
+and proxy_mode =
     [ `Twoway | `Oneway | `Batch_oneway | `Datagram | `Batch_datagram ]
 
 and proxy_parameters =
@@ -260,7 +260,7 @@ and endpoint_type =
     [ `TCP | `UDP | `SSL | `Unknown of int ]
 
 and tcp_endpoint =
-    < host : string; 
+    < host : string;
       port : int;
       timeout : int32;   (* milliseconds! *)
       compress : bool;
@@ -305,7 +305,7 @@ and htype =
   | TDictionary of htype * htype
   | TProxy of string   (* name of the interface in [system] *)
   | TClass of string   (* name of the class in [system] *)
-  | TDirectMapping of 
+  | TDirectMapping of
       htype * (Netbuffer.t -> exn -> unit) * (string -> int ref -> int -> exn)
       (* (ht, marshaller, unmarshaller) *)
 
@@ -376,10 +376,10 @@ and op_mode =
 (** {1 Messages} *)
 
 and msg_type =
-    [ `Request 
+    [ `Request
     | `Batch_request
     | `Reply
-    | `Validate_connection 
+    | `Validate_connection
     | `Close_connection
     ]
 
@@ -590,7 +590,7 @@ and session =
 
 and operation_dispatcher =
       < hydro_effective_id : string;
-        hydro_invoke_operation : string -> (value array -> session -> unit) 
+        hydro_invoke_operation : string -> (value array -> session -> unit)
        >
     (** If you get [Not_found] after only passing the operation name to
         [hydro_invoke_operation] the operation does not exist.
@@ -672,10 +672,10 @@ exception Client_condition of client_condition
         the server caught an exception that is declared in the IDL
         but not for the operation. The string [s] explains the exception.
       - [`Unknown_exception s]: While performing the remote operation
-        the server caught an unknown exception. 
+        the server caught an unknown exception.
         The string [s] explains the exception.
       - [`Error e]: An error happened that is not one of the above.
-        The exception [e] explains the error. 
+        The exception [e] explains the error.
         (This is a fatal error, and the client is shut down.)
    *)
 

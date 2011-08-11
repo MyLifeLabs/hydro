@@ -20,7 +20,7 @@ let check_mapping_applicable arity pat name loc =
   (* See also `Subst case in print_type_term *)
   try
     let b = Buffer.create 100 in
-    Buffer.add_substitute 
+    Buffer.add_substitute
       b
       (fun s ->
 	 let n =
@@ -40,21 +40,21 @@ let check_mapping_applicable arity pat name loc =
 
 let rec print_type_term f ty =
   match ty with
-    | `Unit -> 
+    | `Unit ->
 	fprintf f "unit"
-    | `Int -> 
+    | `Int ->
 	fprintf f "int"
-    | `Int32 -> 
+    | `Int32 ->
 	fprintf f "int32"
-    | `Int64 -> 
+    | `Int64 ->
 	fprintf f "int64"
-    | `String -> 
+    | `String ->
 	fprintf f "string"
-    | `Bool -> 
+    | `Bool ->
 	fprintf f "bool"
-    | `Char -> 
+    | `Char ->
 	fprintf f "char"
-    | `Float -> 
+    | `Float ->
 	fprintf f "float"
     | `Array ty' ->
 	fprintf f "@[<hov 2>";
@@ -144,7 +144,7 @@ let rec print_type_term f ty =
 	(* See also check_mapping_applicable above! *)
 	(* This is a bit hackish... *)
 	let b = Buffer.create 100 in
-	Buffer.add_substitute 
+	Buffer.add_substitute
 	  b
 	  (fun s ->
 	     let n =
@@ -194,7 +194,7 @@ let rec print_ctype f ct =
 	fprintf f "@]@ end@]"
     | `Named s ->
 	fprintf f "%s" s
-	
+
 
 
 let rec print_pat_term f pat =
@@ -235,7 +235,7 @@ let rec print_pat_term f pat =
 	fprintf f "VProxy e%d" v
     | `Constructor(n,v) ->
 	fprintf f "%s e%d" n v
-	  
+
 let rec print_expr_term f expr =
   match expr with
     | `Match1(e1,p,e2) ->
@@ -518,7 +518,7 @@ let rec print_expr_term f expr =
 	fprintf f "( @[<hov 2>";
 	let is_first = ref true in
 	Array.iter
-	  (fun stm -> 
+	  (fun stm ->
 	     if not !is_first then (
 	       fprintf f ";";
 	       fprintf f "@ ";
@@ -575,7 +575,7 @@ let rec print_expr_term f expr =
 	fprintf f "@[<hv>( @[<hv>@[<hv 2>let _ =@ ";
 	print_expr_term f e;
 	fprintf f " in@]@ assert false@]@ )@]"
-	  
+
 
 and print_class_term f cexpr =
   match cexpr with
@@ -632,7 +632,7 @@ let print_types in_sig f types =
   let first = ref true in
   List.iter
     (fun (n, ty) ->
-       if !first then 
+       if !first then
 	 fprintf f "@[<hov 2>type %s" n
        else
 	 fprintf f "@[<hov 2>and %s" n;
@@ -657,9 +657,9 @@ let print_exns impl_flag f exns =
     (fun (n, ty, eq_opt) ->
        fprintf f "@[<hov 2>exception %s" n;
        ( match eq_opt with
-	   | Some eq when impl_flag -> 
+	   | Some eq when impl_flag ->
 	       fprintf f "@ = %s" eq
-	   | _ ->       
+	   | _ ->
 	       fprintf f " of@ ";
 	       print_type_term f ty;
        );
@@ -721,7 +721,7 @@ let print_letrecs f letrecs =
   let first = ref true in
   List.iter
     (fun (n, e) ->
-       if !first then 
+       if !first then
 	 fprintf f "@[<hov 2>let rec %s =@\n" n
        else
 	 fprintf f "@[<hov 2>and %s =@\n" n;
@@ -738,7 +738,7 @@ let print_lets f lets =
   let first = ref true in
   List.iter
     (fun (n, e) ->
-       if !first then 
+       if !first then
 	 fprintf f "@[<hov 2>let %s =@\n" n
        else
 	 fprintf f "@[<hov 2>and %s =@\n" n;
@@ -812,7 +812,7 @@ let print_pad_impl f pad =
   print_classes f (List.rev pad.classes);
   print_split_letrecs f (List.rev pad.letrecs3);
   print_defterms f (List.rev pad.defterms)
-  
+
 let print_pad_sig f pad =
   fprintf f "open Hydro_types@\n";
   print_types true f (List.rev pad.types);

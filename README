@@ -49,7 +49,7 @@ For the license conditions, see the file LICENSE.
   This includes graphs of objects.
 - The whole ICE type system can be mapped to O'Caml types. The
   mapping is quite flexible and configurable, e.g. you can choose
-  whether you prefer arrays or lists as representations of 
+  whether you prefer arrays or lists as representations of
   ICE sequences. Where necessary, the properties of the ICE type
   system are emulated. For example, hydrogen generates special
   code for downcasts of objects.
