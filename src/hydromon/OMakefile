@@ -1,0 +1,53 @@
+FILES = hydromon_proto hydromon_util hydromon_query hydromon_netplex
+
+DOC_FILES = hydromon_query.mli hydromon_netplex.mli
+
+OCAMLPACKS = netstring equeue netplex bigarray
+
+OCAMLFLAGS += -I ../hydro
+
+ABORT_ON_DEPENDENCY_ERRORS = true
+
+OCamlLibrary ( hydromon, $(FILES) )
+
+LocalOCamlGeneratedFiles(hydromon_proto.ml hydromon_proto.mli)
+
+hydromon_proto.ml hydromon_proto.mli: hydromon_proto.ice
+	../hydrogen/hydrogen hydromon_proto.ice
+
+ocamldoc.dump: $(DOC_FILES)
+	ocamlfind ocamldoc -package "$(OCAMLPACKS)" -I ../hydro \
+		-dump ocamldoc.dump -stars $(DOC_FILES)
+
+.DEFAULT: META $(addsuffixes $(LIBSFX),hydromon)
+
+META: META.in
+        if $(not $(file-exists ../../VERSION))
+            cd ../..; make VERSION
+        section
+            version=$(gets ../../VERSION)
+            sed -e 's:@VERSION@:$(version):' META.in >META
+
+.PHONY: install uninstall
+
+install:
+	ocamlfind install hydromon \
+                META *.mli *.cmi *.cma *.ice \
+                -optional *.cmxa *.a
+
+uninstall:
+	ocamlfind remove hydromon
+
+
+section
+    OCAML_LIBS = ../hydro/hydro hydromon
+    OCamlProgram(hydromon_test, hydromon_test)
+
+
+clean:
+        rm -f *.opt *.run *.o *.a *.cm* *~ *.annot
+	rm -f hydromon_proto.ml hydromon_proto.mli
+	rm -f ocamldoc.dump
+	rm -f hydromon_test
+
+

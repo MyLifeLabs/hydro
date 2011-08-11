@@ -1,0 +1,5 @@
+description = "Runtime for ICE"
+version = "@VERSION@"
+requires = "netstring equeue netplex"
+archive(byte) = "hydro.cma"
+archive(native) = "hydro.cmxa"

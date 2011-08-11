@@ -1,0 +1,15 @@
+directory = "src/hydro"
+requires = "netstring,equeue,netplex"
+archive(byte) = "hydro.cma"
+archive(native) = "hydro.cmxa"
+
+package "hydrogen" (
+  directory = "../hydrogen"
+)
+
+package "hydromon" (
+  directory = "../hydromon"
+  requires = "hydro,bigarray"
+  archive(byte) = "hydromon.cma"
+  archive(native) = "hydromon.cmxa"
+)

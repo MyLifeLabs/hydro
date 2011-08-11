@@ -1,0 +1,87 @@
+FILES = hydro_dbg hydro_prelim \
+        hydro_types hydro_util hydro_params hydro_lexer hydro_string \
+        hydro_marshal hydro_unmarshal hydro_message \
+	hydro_transport hydro_connector hydro_endpoint \
+	hydro_proxy hydro_lm hydro_lm_IceObject hydro_lm_IceLocalObject \
+	hydro_builtin hydro_builtin_util hydro_locator hydro_oa \
+	hydro_netplex
+
+DOC_FILES = \
+        hydro_types.mli hydro_params.mli hydro_string.mli \
+        hydro_marshal.mli hydro_unmarshal.mli hydro_message.mli \
+	hydro_transport.mli hydro_connector.mli hydro_endpoint.mli \
+	hydro_proxy.mli hydro_lm.mli hydro_lm_IceObject.mli \
+	hydro_lm_IceLocalObject.mli \
+	hydro_locator.mli hydro_oa.mli hydro_netplex.mli
+
+
+OCAMLPACKS = netstring equeue netplex
+ABORT_ON_DEPENDENCY_ERRORS = true
+
+# Whether to do a profiling build
+if $(defined PROF)
+    OCAMLOPTFLAGS += -p
+    export
+
+# Find out whether this is a 32-bit or 64-bit platform:
+DEFINES =
+if $(eq $(shell ocaml word_size.ml), 64)
+    DEFINES += -ppopt -DWORDSIZE_64
+    export
+else
+    DEFINES += -ppopt -DWORDSIZE_32
+    export
+
+
+OCamlLibrary ( hydro, $(FILES) )
+
+LocalOCamlGeneratedFiles(hydro_types.ml hydro_lexer.ml)
+LocalOCamlGeneratedFiles(hydro_builtin.ml hydro_builtin.mli)
+
+hydro_types.ml: hydro_types.mli
+	cp hydro_types.mli hydro_types.ml
+
+hydro_builtin.ml hydro_builtin.mli: hydro_builtin.ice
+	../hydrogen/hydrogen hydro_builtin.ice
+
+section
+    OCAMLOPTFLAGS += -inline 20 -S
+    OCAMLPACKS += camlp4.macro
+    OCAMLFLAGS += -syntax camlp4o $(DEFINES)
+    hydro_unmarshal.cmx hydro_unmarshal.o:
+    hydro_unmarshal.cmo:
+    hydro_marshal.cmx hydro_marshal.o:
+    hydro_marshal.cmo:
+
+ocamldoc.dump: $(DOC_FILES)
+	ocamlfind ocamldoc -package "$(OCAMLPACKS)" \
+		-dump ocamldoc.dump -stars $(DOC_FILES)
+
+.DEFAULT: META $(addsuffixes $(LIBSFX),hydro)
+
+META: META.in
+        if $(not $(file-exists ../../VERSION))
+            cd ../..; make VERSION
+	section
+  	    version=$(gets ../../VERSION)
+	    sed -e 's:@VERSION@:$(version):' META.in >META
+
+.PHONY: install uninstall
+
+install:
+	ocamlfind install hydro \
+                META *.mli *.cmi *.cma *.ice \
+                -optional *.cmxa *.a \
+		hydro_marshal.cmx hydro_unmarshal.cmx hydro_lm.cmx
+
+uninstall:
+	ocamlfind remove hydro
+
+
+clean:
+        rm -f *.opt *.run *.o *.a *.cm* *~ *.annot
+	rm -f hydro_types.ml
+	rm -f hydro_builtin.ml hydro_builtin.mli
+	rm -f ocamldoc.dump
+
+

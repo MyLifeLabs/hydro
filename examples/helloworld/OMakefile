@@ -1,0 +1,22 @@
+USE_OCAMLFIND = true
+OCAMLPACKS = hydro
+OCAMLFLAGS = -w Amelz
+ABORT_ON_DEPENDENCY_ERRORS = true
+
+.DEFAULT: client server netplex_server
+
+LocalOCamlGeneratedFiles(hello.ml hello.mli)
+
+hello.ml hello.mli: hello.ice
+	ocamlfind hydro.hydrogen/hydrogen hello.ice
+
+OCamlProgram(client, hello client)
+OCamlProgram(server, hello server)
+OCamlProgram(netplex_server, hello netplex_server)
+
+.PHONY: clean
+
+clean:
+	rm -f *.cmi *.cma *.cmo *.cmx *.o *.a *.opt *.run *.omc
+	rm -f hello.ml hello.mli
+	rm -f client server netplex_server

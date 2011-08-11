@@ -1,0 +1,65 @@
+About Hydromon
+
+{1 About Hydromon}
+
+Hydromon allows you to check the liveliness of a server before calling
+it (proactive monitoring). This is done by letting a small helper
+component, the hydromon server, constantly ping the server object.
+The idea is to install the Hydromon server on each node (computer)
+that participates in the cluster. A Hydro client can then safely
+assume that the Hydromon server on the same node is up, and knows more
+about the liveliness of the remote service to call.
+
+Hydromon does not completely avoid that calls "hang" when a remote
+service dies. However, it limits the number of such calls. After a few
+seconds, the Hydromon server has found out that the remote service is
+down, and signals all clients that it is senseless to call this
+service. Nevertheless, requests may hang that have been sent in the
+time period until Hydromon knows about the failure. Because of this,
+it is strongly recommended to set a timeout for each call.
+
+{2 Running the Hydromon server}
+
+The Hydromon server is a netplex component. Its API is defined in
+{!Hydromon_netplex}.
+
+The Hydromon server needs a POSIX shared memory segment. If the OS
+does not support this feature, Hydromon will not work.
+
+{2 Configuring proxies for Hydromon}
+
+The module to use is {!Hydromon_query}:
+
+First create a Hydromon cache:
+
+{[
+let cache = Hydromon_query.create_cache ~port ~period ()
+]}
+
+In [port] pass the TCP port on the local computer where the Hydromon
+server is listening. The [period] is the number of seconds the cache
+entries remain valid - this can usually be something like 3600 (an
+hour). The meaning is that an entry in the shared memory segment is
+allocated for this period of time.
+
+After that, simply configure the proxies so the cache is used:
+
+{[
+Hydromon_query.configure_proxy ~cache ~proxy ~operation ~idempotent()
+]}
+
+The [operation] is the name of the operation to call. If nothing
+better is defined, use "ice_ping" - it is available in all
+objects. You can also use a different operation if it is more
+meaningful, but it must neither take arguments, not pass a result back
+("void"). In [idempotent] you have to specify whether this operation
+is idempotent or not. "ice_ping" is, but your own operation needs not
+to be.
+
+
+{2 Cost of Hydromon}
+
+The check whether a service is alive is very cheap. Every [period]
+seconds an RPC call is required for administrative purposes, but during
+that period the check is practically cost-free (it is a shared memory
+lookup).

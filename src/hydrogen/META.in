@@ -1,0 +1,5 @@
+description = "Generator for ICE"
+version = "@VERSION@"
+requires = "netstring,equeue"
+archive(byte) = "hydrogen.cma"
+archive(native) = "hydrogen.cmxa"

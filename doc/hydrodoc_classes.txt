@@ -1,0 +1,199 @@
+{1 Classes}
+
+
+{2 Objects with data}
+
+As explained, proxies are handles for remote objects. They are the
+most frequent way to access objects. There is, however, another way:
+One can also send the object over the connection, and access it
+directly.
+
+An object can have instance variables and operations (methods). If the
+object is sent, the instance variables are transferred, and another
+version of the object is created on the other side. This copy is
+initialized with the instance variables. Of course, any method
+invocation happens on the copy then.
+
+Sending objects can be interesting as a means to transfer structured
+values as a whole (e.g. trees or graphs). It is not interesting to
+make the methods locally available (there is no way to send code).
+Because of this, we ignore the object methods for now, and focus on
+the instance variables.
+
+For example, the Slice definition is:
+
+{[
+  module Sample {
+    class C {
+      int x;
+      string y;
+    };
+
+    class D extends C {
+      bool z;
+    };
+
+    interface F {
+      void foo(C c);
+    };
+  };
+]}
+
+We have two classes C and D, and D is a subtype of C. We also have
+an interface F, and we assume we can access a remote object that
+exposes F via a proxy for F.
+
+The method [foo] takes an argument - this may either be an instance
+of class C or of its descendant D. ICE demands that if you call [foo]
+with a descendant of the declared class type, all of the descendant
+must be transferred to the remote side, and it must also be recoverable
+if the remote side knows about D. Hydro supports this.
+
+Note that this means that Hydro needs to support downcasts: When a peer
+gets a D object when it expects only C, it must be possible to test for
+the presence of D, and if successful, to uncover D.
+
+This makes the language mapping of objects a bit complicated. O'Caml
+does not support downcasts for its own classes, so we have to generate
+emulation code.
+
+So, to what is C mapped? Let's have a look on the core definitions:
+
+{[
+  type or_Sample_C
+
+  class type od_Sample_C =
+    object
+      inherit od_Ice_Object
+      method x : int32 ref
+      method y : string ref
+    end
+
+  class type o_Sample_C =
+    object
+      inherit od_Sample_C
+      inherit Hydro_lm.object_base
+    end
+
+  val wrap_Sample_C : o_Sample_C -> or_Sample_C
+  val unwrap_Sample_C : or_Sample_C -> o_Sample_C
+  val as_Sample_C : #Hydro_lm.object_base -> o_Sample_C
+
+  class mk_od_Sample_C : int32 * string * unit -> od_Sample_C
+  class mk_Sample_C : #od_Sample_C -> o_Sample_C
+  class restore_Sample_C : Hydro_types.sliced_value -> o_Sample_C
+]}
+
+There are five types that play a role:
+
+- [or_Sample_C] is how C objects normally appear in the rest of the
+  generated code (e.g. the method [foo] takes an [or_Sample_C] as
+  input). It is an opaque type, that means you can do nothing with it
+  except passing it around. [wrap_Sample_C] and [unwrap_Sample_C]
+  allow conversion to [o_Sample_C], so it is equivalent to
+  [o_Sample_C]. (It has technical reasons that this type has been added.)
+- [od_Sample_C] is the data part of the object. The instance variables
+  are represented as methods accessing mutable cells. You can create
+  the data part with [mk_od_Sample_C]. You can create a full object
+  from the data part with [mk_Sample_C].
+- [o_Sample_C] is the full object type. It includes the data part,
+  any operations (here we haven't any), and the base properties of
+  all objects that come from [Hydro_lm.object_base].
+- [Hydro_lm.object_base] (synonymous to [Hydro_types.object_value])
+  is the supertype of all transferrable and coercible objects.
+  [o_Sample_C] is a descendant. There is a coercion function
+  [as_Sample_C] that tries to coerce any other Hydro object to C.
+  This function may fail at runtime with [Invalid_coercion] if this
+  is not possible.
+- [Hydro_types.sliced_value] (synonymous to [Hydro_lm.sliced_base])
+  is an even smaller supertype of all transferrable objects. 
+  In contrast to [object_base] coercions are not supported.
+
+If you only want to create a pure data object, you can simply
+combine [wrap_Sample_C], [mk_Sample_C], and [mk_od_Sample_C]:
+
+{[
+  let od = new mk_od_Sample_C (34l, "Hello", ()) in
+  let o = new mk_Sample_C od in
+  let or = wrap_Sample_C
+]}
+
+If the object had operations, [mk_Sample_C] would define dummy
+implementations for these operations that always fail for any
+invocation. But you can override these dummies by inheriting from
+[mk_Sample_C]:
+
+{[
+  class my_C od =
+  object
+    inherit mk_Sample_C od
+    method bar = ...
+  end
+]}
+
+In order to look at the instance variables of an object [or] you
+receive, simply unwrap it:
+
+{[
+  let o = unwrap_Sample_C or in
+  let x = !(o#x)
+]}
+
+Now, how to override methods in objects you receive? After unwrapping
+you always get the generated version of [o_Sample_C]. It is possible
+to change that by defining a custom constructor for restoring received
+objects:
+
+{[
+  class my_restore_C sv =
+  object
+    inherit restore_Sample_C sv
+    method bar = ...
+  end
+
+  Hydro_prelim.CiHashtbl.replace sys#ctors "::Sample::C"
+    (fun sv -> (new my_restore_C sv :> Hydro_lm.object_base))
+]}
+
+The [restore_Sample_C] class is used for restoring received objects.
+It is entered by default in the [sys#ctors] hash table. By replacing
+it there, you can select your own variant.
+
+Finally, how do the announced downcasts work? For example, we can
+create a D object and upcast it to C by:
+
+{[
+  let od_d = new mk_od_Sample_D (true, (34l, "Hello", ())) in
+  let o_d = new mk_Sample_D od_d in
+  let o_c = (o_d :> o_Sample_C)
+]}
+
+This is the usual O'Caml coercion. We get the original typing back
+by doing
+
+{[
+  let o_d' = as_Sample_D o_c
+ ]}
+
+It can only decided at runtime whether the downcast is possible.
+If it fails, we get the exception [Invalid_coercion]. In this example,
+it always succeeds because we know [o_c] is in reality a D object.
+Now, [o_d] and [o_d'] are really the same object:
+
+{[
+  o_d # x := 35l;
+  print_int32 (! (o_d' # x))
+]}
+
+will print 35. Even [o_d = o_d'] will return [true] - the object remains
+the same, only the typing changes.
+
+Note that the [as_...] functions can also be used for upcasting instead
+of the [:>] operator. Of course, the latter is a no-op whereas the
+[as_...] function can be expensive.
+
+
+{2 Objects with operations}
+
+XXX
+

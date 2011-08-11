@@ -1,0 +1,235 @@
+{1 Servers}
+
+A server contains a set of ICE objects that are known under certain
+identities. An invocation of an operation always refers to a certain
+object which is done by passing the identity of the object.
+
+Note that operations aren't sent to interfaces, they are sent to
+objects. It is expected that the objects implement interfaces.
+
+An "ICE object" is a purely virtual entity in the sense that it does
+not directly correspond to an object in the programming language.
+Basically, the server pretends to have ICE objects, but in reality
+there is a mapping from identities to implementation objects, called
+servants.
+
+In this chapter, we deal with how to create servants, and how to
+create the mapping from identities to servants.
+
+
+{2 Starting with an example}
+
+Let's assume we want to have a server for an object with the interface
+
+{[
+  interface Greeter {
+    string greetingMessage(string yourname);
+  };
+]}
+
+When you [hydrogen] this Slice definition, you get
+
+{[
+  class type rr_Greeter__greetingMessage =
+  object
+    method result : string
+  end
+
+  class type oi_Greeter =
+  object
+    inherit oi_Ice_Object
+    method greetingMessage : string ->
+                             (rr_Greeter__greetingMessage -> unit) ->
+                             (user_exception -> unit) ->
+                             Hydro_types.session -> 
+                               unit
+  end
+
+  class skel_Greeter : oi_Greeter
+
+  val parachute :
+    (Hydro_types.session -> 'r) ->
+    ('r -> unit) ->
+    (user_exception -> unit) -> 
+    Hydro_types.session -> 
+      unit
+]}
+
+among other things. As you can see, the interface is mapped to
+a class type [oi_Greeter] that extends [oi_Ice_Object]. Remember
+that every object is a subtype of "::Ice::Object", the predefined
+root of the inheritance relation. The inheritance from [oi_Ice_Object]
+reflects that (and also implements predefined operations like
+[ice_ping]).
+
+There is an implementation of [oi_Greeter] called [skel_Greeter].
+This is a skeleton class that provides dummy implementations for
+all user-defined operations, and real implementations for all
+predefined operations like [ice_ping]. We'll use [skel_Greeter]
+to define our servant.
+
+Note the quite complicated type of [greetingMessage]. What does it
+mean? Well, we try not to answer that directly. Instead, look at
+[parachute]. The type of this function has a lot of similarity with 
+the type of the operation, and actually we can use [parachute] to
+hide the complexity.
+
+We now need
+
+{[
+  let esys = Unixqueue.create_unix_event_system()
+  let sys = Hydro_lm.create_system()
+  M.fill_system sys;
+  let params = Hydro_params.server_params()
+]}
+
+as well as a [sockaddr] of type [Unix.sockaddr] that says to which
+port the server has to bind to:
+
+{[
+  let sockaddr = Unix.ADDR_INET(Unix.inet_addr_any, 1234)
+]}
+
+Then we can create the master server:
+
+{[
+  let mc = `Named_endpoint (sockaddr, `TCP)
+  let master = Hydro_endpoint.Master.create sys mc params esys
+]}
+
+What we need now is the [servant] implementing the functionality 
+announced in the [Greeter] interface, and the mapping from
+identities to servants. For the latter, we create a so-called
+object adapter, and add the servant under a certain identity:
+
+{[
+   let id = ( object 
+	        method name = "MySingleGreeter"
+	        method category = ""
+	      end 
+	    )
+   let oa = Hydro_oa.object_adapter()
+   oa # add id (servant :> Hydro_lm.interface_base)
+ ]}
+
+Finally, tell the [master] about the existence of the object adapter,
+and start serving:
+
+{[
+  Hydro_endpoint.Master.bind_adapter
+    master
+    (oa :> Hydro_types.object_dispatcher);
+  Unixqueue.run esys
+]}
+
+But how to get [servant]? As mentioned the generated [skel_Greeter]
+is a template we only have to fill in by defining our operations:
+
+{[
+  class myGreeter =
+  object(self)
+    inherit skel_Greeter
+    method greetingMessage yourname =
+      parachute
+        (fun session ->
+          let s = ... (* compute the result string *) in
+          ( object
+              method result = s
+            end
+          )
+        )
+  end
+]}
+
+Then: 
+
+{[
+  let servant = new myGreeter
+]}
+
+Look again at the definition of [greetingMessage]. By using the pattern
+
+{[
+  method name arg1 arg2 ... = parachute (fun session -> ...)
+]}
+
+all the complicated types vanished. Actually, [greetingMessage] gets
+two functions as arguments that are able to pass return values and
+exceptions back to the caller, and a session object. The [parachute]
+simplifies this: The result of the "parachuted" function is taken
+as the result of the operation, and any exceptions are caught
+(hence the name) and dealt with.
+
+This example is included in the distributed tarball under
+[examples/helloworld], together with a simple client.
+
+{2 Defining servants implementing several interfaces (facets)}
+
+XXX
+
+{2 Creating unique identities}
+
+XXX
+
+{2 Asynchronous servants}
+
+Asynchronous servants are supported. In fact, all servants are async,
+and only the [parachute] enforces a synchronous behavior. [parachute]
+is defined by the generator like
+
+{[
+let rec parachute =
+  (fun userfn ->
+    (fun emit_result -> 
+      (fun emit_exn -> 
+        (fun session -> 
+          try ( emit_result (userfn session) )
+          with
+            | User_exception e -> emit_exn e
+            | g -> 
+                session # emit_unknown_exception
+                  (Hydro_util.exn_to_string g)
+        )
+      )
+    )
+  )
+]}
+
+Now, a user-written synchronous method definition looks like:
+
+{[
+method foo arg1 arg2 ... argN =
+  parachute
+    (fun session ->
+        ...
+        result
+    )
+]}
+
+As one can see from its definition, [parachute] "eats up" three more
+arguments and hides them from the user. You could also write
+
+{[
+method foo arg1 arg2 ... argN emit_result emit_exn session =
+  try 
+    let result = ... in
+    emit_result result
+  with
+   | User_exception e -> emit_exn e
+   | g -> 
+        session # emit_unknown_exception (Hydro_util.exn_to_string g)
+]}
+
+I hope it becomes now clear how to make the method async. Just don't
+call [emit_result]/[emit_exn] immediately, but later when you have the
+result (or exception). Bypass [parachute], whose task is to ensure that
+[emit_result]/[emit_exn] is immediately called.
+
+
+{2 Creating proxy references of objects}
+
+XXX
+
+{2 Running servers under Netplex}
+
+XXX

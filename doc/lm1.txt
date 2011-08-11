@@ -1,0 +1,130 @@
+**********************************************************************
+Language Mapping 1: basics
+**********************************************************************
+
+file.ice:
+
+module Sample {
+  sequence<string> StringSeq;
+
+  dictionary<string, string> StringDict;
+
+  enum Color { red, green, blue };
+
+  struct Structure
+  {
+    string name;
+    Color value;
+  };
+
+  sequence<Structure> StructureSeq;
+
+}
+
+----------------------------------------------------------------------
+
+- All type definitions go to file_types.ml = file_types.mli
+
+- Marshalling stuff goes to file_marshal.ml
+
+- System definition goes to file_system.ml
+
+- Client definition of proxies go to file_clnt.ml
+
+- Server definition of proxies go to file_srv.ml
+
+----------------------------------------------------------------------
+
+file_types.mli:
+
+- First the flat type definition. This is required, since Slice allows
+  cross-module types.
+
+module Flat_types : sig
+  type t_sample_StringSeq = string array
+  type t_sample_StringDict = (string * string) list
+  type t_sample_Color = [ `red | `green | `blue ]
+  type t_sample_Structure = { name : string; value : t_sample_Color }
+  type t_sample_StructureSeq = t_sample_Structure array
+end
+
+- Now the module hierarchy:
+
+module Sample : sig
+  type t_StringSeq = Flat_types.t_sample_StringSeq
+  type t_StringDict = Flat_types.t_sample_StringDict
+  type t_Color = Flat_types.t_sample_Color
+  type t_Structure = Flat_types.t_sample_Structure
+  type t_StructureSeq = Flat_types.t_sample_StructureSeq
+end
+
+----------------------------------------------------------------------
+
+file_marshal.mli:
+
+module Flat_marshal : sig
+  open File_types.Flat_types
+  val to_sample_StringSeq : Hydro_types.value -> t_sample_StringSeq
+  val of_sample_StringSeq : t_sample_StringSeq -> Hydro_types.value
+  ...
+end
+
+
+implementation:
+
+module Flat_marshal = struct
+  open File_types.Flat_types
+
+  let e_lm() =
+    raise Language_mapping_error
+
+  let rec to_StringSeq v =
+    match v with
+      | `Sequence a -> Array.map to_1 a
+      | _ -> e_lm()
+
+  and to_1 v =
+    (* non-exported helper for "string" *)
+    match v with
+      | `String s -> s
+      | _ -> e_lm()
+
+  and ...
+
+
+  let rec of_StringSeq a =
+    `Sequence (Array.map of_1 a)
+
+  and of_1 s =
+    (* non-exported helper for "string" *)
+    `String s
+
+  and ...
+
+----------------------------------------------------------------------
+
+file_system.mli:
+
+val system : Hydro_types.system
+
+- The system contains all ICE type descriptions
+
+implementation:
+
+let types = Hashtbl.create 1;;
+let exceptions = Hashtbl.create 1;;
+let interfaces = Hashtbl.create 1;;
+let classes = Hashtbl.create 1;;
+
+let system =
+  ( object
+      method types = types
+      method exceptions = exceptions
+      method interfaces = interfaces
+      method classes = classes
+    end
+  );;
+
+
+Hashtbl.add types "::Sample::StringSeq" (`Sequence `String);;
+...

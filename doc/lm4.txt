@@ -1,0 +1,253 @@
+**********************************************************************
+Language Mapping 4: Classes (client view)
+**********************************************************************
+
+module Sample {
+
+  class Class1 {
+    string text;
+    code int;
+  }
+
+  class Class2 extends Class1 {
+    string detail;
+  }
+
+}
+
+Any operations are ignored here - but a proxy is generated for it,
+too, and the operations go into the proxy definition.
+
+----------------------------------------------------------------------
+
+Common object definition in Hydro_types:
+
+
+class type class_value =
+object
+  inherit sliced_value      (* The value interface *)
+
+  method hydro_cast : exn   (* Used for dynamic casts, see below *)
+  ...
+
+  (* CHECK: Which other methods? *)
+end
+
+
+This is the side of the object that returns marshallable values.
+The language-mapped side is defined for every class.
+
+----------------------------------------------------------------------
+
+file_types.mli:
+
+module Flat_view : sig
+
+  ...
+
+  (* Note that we map classes to "t_<Class> option", not only "t_<Class>" *)
+
+  class type t_Sample_Class1 =
+  object
+    inherit Hydro_types.class_value
+    method text : string
+    method code : int
+  end
+
+  class type t_Sample_Class2 =
+  object
+    inherit c_Sample_Class1
+    method detail : string
+  end
+
+  (* Tagged view for hydro_cast: *)
+  exception T_Sample_Class1 of t_Sample_Class1
+  exception T_Sample_Class2 of t_Sample_Class2
+
+end
+
+----------------------------------------------------------------------
+
+file_marshal.mli:
+
+(* somewhere defined: *)
+class c_Ice_Object : t_Ice_Object
+
+class c_Sample_Class1 : 
+         ~text:string -> ~code:int -> t_Sample_Class1
+class c_Sample_Class2 : 
+         ~text:string -> ~code:int -> ~detail:string -> t_Sample_Class2
+
+class map_Sample_Class1 : sliced_value -> class_value
+class map_Sample_Class2 : sliced_value -> class_value
+
+val as_Sample_Class1 : class_value -> t_Sample_Class1
+val as_Sample_Class2 : class_value -> t_Sample_Class2
+
+val to_Sample_Class1 : value -> t_Sample_Class1 option
+val to_Sample_Class2 : value -> t_Sample_Class2 option
+
+val of_class : #class_value option -> value
+
+
+implementation:
+
+
+class clz_Sample_Class1 v1_lz =
+  let (text, code) = Lazy.force v1_lz in
+object(self)
+  method hydro_effective_id = "::Sample::Class1"
+  method hydro_slices =
+    [ (`Decoded("::Ice::Object", [| ... |] ));
+      (`Decoded("::Sample::Class1", [| `String text;
+                                       `Int code |] )) ]
+  method text = text
+  method code = code
+end
+
+
+class c_Sample_Class1 ~text ~code =
+  clz_Sample_Class1 (lazy (text,code))
+
+
+class clz_Sample_Class2 v1_lz v2_lz =
+   let (text, code) = Lazy.force v1_lz in
+   let (detail) = Lazy.force v2_lz in
+object(self)
+  inherit c_Sample_Class1 ~text ~code as super
+  method hydro_effective_id = "::Sample::Class2"
+  method hydro_slices =
+    let l = super#hydro_slices in
+    l @ [ `Decoded("::Sample::Class2", [| `Int detail |] ) ]
+  method detail = detail
+end
+
+class c_Sample_Class2 ~text ~code ~detail =
+  clz_Sample_Class2 (lazy (text,code)) (lazy detail)
+
+
+
+(* Somewhere: *)
+let lazy_decode_Ice_Object sv =
+  match sv with
+    | (`Decoded("::Ice::Object", _)) :: sv -> ( lazy (), sv )
+    | _ -> fail
+
+
+let lazy_decode_Sample_Class1 sv =
+  match sv with
+    | (`Decoded("::Sample::Class1", [| textv; codev |] ) :: sv ->
+        let lz_val =
+          lazy(
+             (* This is lazy because here might be
+                a recursion to the class itself! *)
+            let text = match textv with
+                        | `String s -> s
+                        | _ -> fail in
+            let code = ... in
+            (text,code)
+          ) in
+        (lz_val, sv)
+    | _ -> fail
+
+let lazy_decode_Sample_Class2 sv =
+  match sv with
+    | (`Decoded("::Sample::Class2", ...) :: sv -> (..., sv)
+    | _ -> fail
+
+class map_Sample_Class1 sv =
+  (* Important: sv may still contain `Placeholders! This is why we decode
+     it lazily, i.e. on demand 
+   *)
+  let (_, sv1) = lazy_decode_Ice_Object sv in
+  let (value2, sv2) = lazy_decode_Sample_Class1 sv1 in
+  (clz_Sample_Class1 value2 :> class_value)
+
+class map_Sample_Class2 sv =
+  (* Important: sv may still contain `Placeholders! This is why we decode
+     it lazily, i.e. on demand 
+   *)
+  let (_, sv1) = lazy_decode_Ice_Object sv in
+  let (value2, sv2) = lazy_decode_Sample_Class1 sv1 in
+  let (value3, sv3) = lazy_decode_Sample_Class2 sv2 in
+  (clz_Sample_Class2 value2 value2 :> class_value)
+
+(* map_* are better classes than functions so users can inherit
+   from them
+  *)
+
+
+let as_Sample_Class1 cv =
+  match cv#hydro_cast with
+    | T_Sample_Class1 c -> c
+    | T_Sample_Class2 c -> (c :> t_Sample_Class1)
+
+let as_Sample_Class2 cv =
+  match cv#hydro_cast with
+    | T_Sample_Class1 _ -> fail
+    | T_Sample_Class2 c -> c
+
+
+let to_Sample_Class1 v =
+  match v with
+    | `Class { contents = `Value cv }
+        Some(as_Sample_Class1 cv)
+    | `Null ->
+        None
+    | _ -> fail
+
+
+let of_class c_opt =
+  match c_opt with
+    | None -> `Null
+    | Some c -> `Class { contents = `Value (c :> class_value) }
+
+----------------------------------------------------------------------
+
+file_casts.mli:
+
+val as_Sample_Class1 : class_value -> t_Sample_Class1
+val as_Sample_Class2 : class_value -> t_Sample_Class2
+
+reexported from file_marshal
+
+----------------------------------------------------------------------
+
+file_system.mli:
+
+The system object is extended by a registry of class mappers:
+
+  method class_mapping : (string, (sliced_value -> class_value)) Hashtbl.t
+
+The mapping is initialized with all known map_* functions.
+
+
+let map_any sys sv =
+  let mapper =
+    try Hashtbl.find sys#class_mapping sv#hydro_effective_id
+    with Not_found -> fail in
+  mapper sv
+
+----------------------------------------------------------------------
+
+Walk through for decoding a received class value:
+
+- The unmarshaller reads a slice_value sv. 
+
+- The unmarshaller _immediately_ maps sv to a class_value cv.
+  Mapping means instantiating one of the c_* classes.
+  That means the value graph already contains the right
+  objects, but their language-mapped interface is not yet exposed.
+
+- When language-mapping the value graph, we'll reach
+  to_<Class> mappers. These only expose the hidden interface.
+
+Walk through for encoding a class value:
+
+- If in a language-mapped graph a class object is found, it is
+  a subtype of class_value. of_class generically creates the 
+  value from it by coercing to the base class, and by adding a bit of
+  decoration.
+
+- When the value is marshalled, the hydro_slices method is called
+  to map the members of the object.

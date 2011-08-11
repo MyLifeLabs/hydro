@@ -1,0 +1,168 @@
+**********************************************************************
+Language Mapping 3: Exceptions
+**********************************************************************
+
+module Sample {
+  
+  exception Exn {
+    string text;
+    code int;
+  }
+
+  exception SubExn1 extends Exn {
+    string detail;
+  }
+
+  exception SubExn2 extends Exn {
+    string detail;
+  }
+
+  interface Intf {
+    void hello(void) throws X;
+  }
+}
+
+----------------------------------------------------------------------
+
+file_types.mli:
+
+module Flat_view : sig
+  type exception_name =
+    [ `XSampleExn | `XSampleSubExn1 | `XSampleSubExn2 ]
+
+  class type any_exception = 
+    object
+      method hydro_exn_name : exception_name
+      method hydro_exn_id : string   (* String of hydro_exn_name *)
+      method is_sample_Exn : bool
+      method is_sample_SubExn1 : bool
+      method is_sample_SubExn2 : bool
+      method as_sample_Exn : t_sample_Exn
+      method as_sample_SubExn1 : t_sample_SubExn1
+      method as_sample_SubExn2 : t_sample_SubExn2
+    end
+
+  class type t_sample_Exn =
+    object
+      inherit any_exception
+      method text : string; 
+      method code : int 
+    end
+
+  class type t_sample_SubExn1 =
+    object
+      inherit t_sample_Exn
+      method detail : string
+    end
+
+  class type t_sample_SubExn2 =
+    object
+      inherit t_sample_Exn
+      method detail : string
+    end
+
+  exception User_exception of any_exception
+end
+
+By convention, when the [result] method is invoked after a call,
+a [User_exception] may be raised for exceptional results.
+
+One can catch and process such an exception as follows:
+
+try
+  let r = reply#result in
+  ...
+with
+  User_exception ue when ue#is_sample_SubExn1 ->
+    let ue' = ue#as_sample_SubExn1 in
+    let detail = ue' # detail in
+    ...
+
+
+----------------------------------------------------------------------
+
+file_marshal.mli:
+
+class exception_pattern : any_exception
+  -- defines an exception where
+     - hydro_name fails
+     - is_* returns false
+     - as_* fails
+
+class x_sample_Exn : (string * int) -> t_sample_exn
+class x_sample_SubExn1 : (string * int) -> string -> t_sample_SubExn1
+class x_sample_SubExn2 : (string * int) -> string -> t_sample_SubExn2
+  -- for every hierarchy level, another function call
+
+val decode_exception : sliced_value -> any_exception
+
+
+implementation:
+
+class x_sample_Exn (text, code) : t_sample_exn =
+object(self)
+  inherit exception_pattern
+  method hydro_name = `XSampleExn
+  method is_sample_Exn = true
+  method as_sample_Exn = (self : #t_sample_exn :> t_sample_exn)
+  method text = text
+  method code = code
+end
+
+class x_sample_SubExn1 super_value detail : t_sample_SubExn1 =
+object(self)
+  inherit x_sample_Exn super_value
+  method hydro_name = `XSampleSubExn1
+  method is_sample_SubExn1 = true
+  method as_sample_SubExn1 = (self : #t_sample_SubExn1 :> t_sample_SubExn1)
+  method detail = detail
+end
+
+(same for x_sample_SubExn2)
+
+
+let decode_sample_Exn sv =
+  match sv with
+    | (`Decoded("::Sample::Exn", [| textv; codev |] )) :: sv' ->
+      let text =
+        match textv with
+         | `String s -> s
+         | _ -> fail in
+      let code =
+        ... in
+      let return_value = (text, code) in
+      (return_value, sv')
+
+    | _ -> fail
+
+
+let decode_sample_SubExn1 sv =
+  match sv with
+    | (`Decoded(::Sample::SubExn1", [| detailv |] )) :: sv' ->
+      let detail = ... in
+      (detail, sv')
+    | _ -> fail
+
+(same for decode_sample_SubExn2)
+
+
+let decode_exception sv =
+  match sv#hydro_effective_id with
+    | "::Sample::Exn" -> 
+         let (value1, sv1) = decode_sample_Exn sv in
+         new x_sample_Exn value1
+    | "::Sample::SubExn1" ->
+         let (value1, sv1) = decode_sample_Exn sv in
+         let (value2, sv2) = decode_sample_SubExn1 sv1 in
+         new x_sample_SubExn1 value1 value2
+    | "::Sample::SubExn2" ->
+         let (value1, sv1) = decode_sample_Exn sv in
+         let (value2, sv2) = decode_sample_SubExn2 sv1 in
+         new x_sample_SubExn2 value1 value2
+    | _ -> raise ...
+
+----------------------------------------------------------------------
+
+file_system.mli
+
+- this is straight-forward

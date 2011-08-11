@@ -1,0 +1,5 @@
+description = "Runtime for ICE (monitoring add-on)"
+version = "@VERSION@"
+requires = "hydro bigarray"
+archive(byte) = "hydromon.cma"
+archive(native) = "hydromon.cmxa"

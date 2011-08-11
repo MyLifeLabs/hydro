@@ -1,0 +1,32 @@
+# $Revision:$
+# $Date:$
+# $Author:$
+# $HeadURL:$
+
+USE_OCAMLFIND = true
+OCAMLOPTFLAGS = -dtypes
+OCAMLCFLAGS = -dtypes -g
+OCAMLFLAGS = -w Amelz
+LIBSFX = .cma
+
+BYTE_ENABLED = true
+if $(not $(defined NATIVE_ENABLED))
+    NATIVE_ENABLED = true
+    export
+
+if $(NATIVE_ENABLED)
+    LIBSFX = .cma .cmxa
+    export
+
+# Whether to do a profiling build
+if $(defined PROF)
+    OCAMLOPTFLAGS += -p
+    export
+
+
+.PHONY: clean
+
+.SUBDIRS: hydro hydrogen hydromon
+
+clean:
+        rm -f *.opt *.run *.o *.a *.cm* *~ *.annot

@@ -1,0 +1,243 @@
+{1 Proxies}
+
+Let's assume we have a simple Slice interface M.ice:
+
+{[ 
+   module Sample {
+     interface F {
+       int add(int x, int y);
+     };
+   };
+]}
+
+Furthermore, we assume that there is a remote object called Adder
+on host "worker", port 4711, and Adder implements this interface.
+How do we call [add] synchronously?
+
+Technically, we need a local proxy for Adder that supports the
+invocation of [add]. Such a proxy can only live in a proxy
+environment, so we first have to create one:
+
+{[
+  let proxy_env =
+    let esys = Unixqueue.create_unix_event_system () in
+    let sys = Hydro_lm.create_system() in
+    M.fill_system sys;
+    let cp = Hydro_params.client_params() in
+    let pool = Hydro_proxy.pool() in
+    let resolver = Hydro_proxy.proxy_resolver cp in
+    let conf = Hydro_proxy.proxy_conf() in
+    ( object
+	method event_system = esys
+	method system = sys
+	method proxy_resolver = resolver
+	method client_pool = pool
+	method default_proxy_conf = conf
+      end : Hydro_proxy.proxy_env_t
+    )
+]}
+
+As you see, the environment is just a container for all relevant
+session variables. The [pool] manages the active connections to ICE
+servers. The [resolver] is a facility that finds a connection for a
+given reference to a remote object. (Note that you can also use
+[Hydro_locator.proxy_resolver] instead with enhanced capabilities.)
+
+Then, we have to describe the sever socket where the remote object
+lives:
+
+{[
+  let endpoints =
+    `Endpoints [| `TCP ( object
+                           method host = "worker"
+                           method port = 4711
+                           method timeout = 60_000l  (* milliseconds *)
+                           method compress = false
+                         end : Hydro_types.tcp_endpoint
+                       )
+               |]
+ ]}
+
+(Note: Currently, [compress=false] is required because Hydro does not
+support compression yet.)
+
+Finally, we create the full address of the remote object:
+
+{[
+  let addr =
+    ( object
+        method id = ( object method name = "Adder"
+                             method category = ""
+                      end )
+        method facet = None
+        method secure = false
+        method mode = `Twoway
+        method parameters = endpoints
+      end : Hydro_types.proxy_addr
+    )
+]}
+
+(Note: Currently, [secure=false] and [mode=`Twoway] are the only
+supported options for addressing the object.)
+
+Alternatively, one can also specify the address in a string notation
+(described in the ICE manual, look for "stringified proxies"):
+
+{[
+  let addr =
+    Hydro_string.proxy_addr_of_string 
+      "Adder -t : tcp -h worker -p 4711 -t 60000"
+]}
+
+Now the language mapping comes into play. After doing
+
+{[ hydrogen m.ice ]}
+
+you get an O'Caml interface [m.mli] with 70 lines, and the corresponding
+implementation [m.ml] has even 216 lines. Of course, there is a lot of
+stuff that is generated just in case it's needed. For instance, code
+for exception handling is emitted although no exceptions are defined
+in [m.ice].
+
+The relevant part of [m.mli] is:
+
+{[
+  type pr_Sample_F = [ `Ice_Object | `Sample_F  ] Hydro_lm.proxy_reference
+
+  class type r_Sample_F_add =
+    object
+      method hydro_response : Hydro_lm.client_response
+      method result : int32
+    end
+
+  class type poi_Sample_F =
+    object
+      inherit poi_Ice_Object
+      method add : int32 ->
+		     int32 -> r_Sample_F_add Hydro_lm.call_suspension_t
+    end
+
+  class type po_Sample_F =
+    object
+      inherit Hydro_proxy.proxy_t
+      inherit poi_Sample_F
+      method hydro_proxy_reference : pr_Sample_F
+    end
+
+  val pc_Sample_F : Hydro_proxy.proxy_env_t -> pr_Sample_F -> po_Sample_F
+
+  val unchecked_pr_Sample_F : 't Hydro_lm.proxy_reference -> pr_Sample_F
+]}
+
+What does this mean? The address [addr] is an untyped name of the
+proxy.  The generated module defines [pr_Sample_F] which is basically
+also an address, but it has an attached type parameter
+[[`Ice_Object|`Sample_F]] (note that this is a polymorphic variant
+used as phantom parameter).  Effectively, the {b values} [`Ice_Object]
+and [`SampleF] are the names of the supported interfaces (by
+definition, every interface is a descendent of the predefined
+[::Ice::Object], the root of the inheritance hierarchy).  The {b type}
+[[`Ice_Object|`SampleF]] enumerates all interfaces the proxy supports
+(which are several due to interface inheritance). This becomes clearer
+when we define a second interface G (inside module Sample) as
+
+{[
+  interface G extends F {
+    int sub(int x, int y);
+  };
+]}
+
+For G we would get in [m.mli]:
+
+{[
+  type pr_Sample_G =
+    [ `Ice_Object | `Sample_F | `Sample_G ] Hydro_lm.proxy_reference
+]}
+
+Here, the names of three interfaces appear since every proxy for G is
+implicitly a proxy for F, and also a proxy for [::Ice::Object]. This
+corresponds to the fact that [pr_Sample_G] is a subtype of
+[pr_Sample_F], which is a subtype of [pr_Ice_Object] (see its
+definition in the runtime module [Hydro_lm_IceObject]).
+
+Now, how can we get a value of [pr_Sample_F]? We do first
+
+{[
+  let pr = Hydro_lm.pr_of_address addr
+]}
+
+but this creates only an [ [ `Ice_Object ] proxy_reference ], i.e. the
+parameter is wrong, or better too unspecific. We have to downcast this
+typed proxy reference. In general, ICE defines two ways for
+downcasting proxies: Either as unchecked cast or as checked cast. In
+the latter way the server is asked whether the remote object is really
+an instance of the desired interface. Currently, Hydro does not implement
+checked casts, so we can only do
+
+{[
+  let pr' = M.unchecked_pr_Sample_F pr
+]}
+
+and have finally a [pr_Sample_F] reference.
+
+As mentioned, such references are only typed incarnations of addresses.
+We still have no way of calling a method. In order to do this, we have
+to create the proxy object:
+
+{[
+  let po = M.pc_Sample_F proxy_env pr'
+]}
+
+This object of type [po_Sample_F] is now a live proxy, i.e. it can
+connect to the server, manage connections, and of course also invoke
+methods. Note that it is still unknown whether the remote object
+exists - this is first checked on the first method call.
+
+The type [po_Sample_F] again reflects the inheritance relation. As F is
+a descendent of [::Ice::Object], the type [po_Sample_F] is a subtype
+of [po_Ice_Object]. For the second interface G we would have that
+[po_Sample_G] is a subtype of [po_Sample_F].
+
+We can call a number of methods on [po]. Some are predefined in
+[Hydro_proxy.proxy_t], some in [Hydro_lm_IceObject], and the other are
+added in the generated code. The predefined methods include
+
+- [hydro_env]: Return the proxy environment
+- [hydro_id]: Return the object identity ("Adder")
+- [ice_ping]: Check the liveliness of the remote object
+
+The generated methods:
+
+- [hydro_proxy_reference]: Returns [pr']
+- [add]: Invokes the [add] method of the remote object
+
+The [add] method has the strange type
+
+{[
+   method add : int32 -> int32 -> r_Sample_F_add Hydro_lm.call_suspension_t
+]}
+
+The parameters are clearly [x] and [y], but what do we get as result?
+The point is that [add] only prepares the invocation, but does not do
+it immediately. Because of this, you get a call suspension object, and
+this allows you (1) to modify call parameters like timeouts, and
+(2) to select between a synchronous and an asynchronous call.
+
+We do a synchronous call:
+
+{[ 
+  let r = (po # add 42l 16l) # scall
+]}
+
+This statement first returns when the response (or error code) has
+arrived. [r] has type [r_Sample_F_add], and you get the main result
+by doing
+
+{[
+  let z = r#result
+]}
+
+which is hopefully 58l. Note that [result] can also throw exceptions.
+In case the method has output parameters, these additional output
+values are accessible as [out_]{i name}, e.g. [r#out_remark] if there
+was an output parameter [remark].

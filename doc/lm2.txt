@@ -1,0 +1,285 @@
+**********************************************************************
+Language Mapping 2: proxies, client view
+**********************************************************************
+
+file.ice:
+
+module Sample {
+  sequence<string> StringSeq;
+
+  dictionary<string, string> StringDict;
+
+  enum Color { red, green, blue };
+
+  struct Structure
+  {
+    string name;
+    Color value;
+  };
+
+  sequence<Structure> StructureSeq;
+
+  interface Intf {
+    StringSeq extractNames(StructureSeq s);
+    Color getColor();
+    void passDict(StringDict d);
+    StringSeq extractSomething(StructureSeq s, out StringDict d);
+    void tellIntf(*Intf proxy);
+    *Intf getIntf();
+  };
+
+}
+
+TODO: Null proxy values!
+
+----------------------------------------------------------------------
+
+Additions to Hydro_types (or elsewhere):
+
+type 't proxy_port
+val extract_spec : 't proxy_port -> Hydro_types.proxy_spec
+val extract_name : 't proxy_port -> 't
+val create_port : 't -> Hydro_types.proxy_spec -> 't proxy_port
+
+class type ['response] call_susp = 
+object
+  method scall : 'response
+  method acall : ('response -> unit) -> unit
+  method with_params : call_params -> 'response call_susp
+  (* + additional methods for every call parameter *)
+end
+
+
+class call_susp_def acall mapresponse =
+object
+  val cp = Hydro_client.call_params()
+  method scall = 
+    acall cp (fun f -> ...); Unixqueue.run esys; ...
+  method acall f =
+    acall cp f
+  method with_params cp' = 
+    < cp = cp' >
+end
+
+
+----------------------------------------------------------------------
+
+file_types.mli:
+
+- For the generated simple type definitions, also look at lm1.txt
+
+module Flat_types : sig
+  type t_sample_StringSeq = string array
+  type t_sample_StringDict = (string * string) list
+  type t_sample_Color = [ `red | `green | `blue ]
+  type t_sample_Structure = { name : string; value : t_sample_Color }
+  type t_sample_StructureSeq = t_sample_Structure array
+
+  type proxy_name =
+    [ `ISampleIntf ]
+    (* prefix I: interface
+       prefix C: class
+     *)
+
+  type t_sample_Intf = [ `ISampleIntf ] proxy_port
+    -- If the proxy inherited from a super proxy, the generated type would
+       look like
+          [ `ISampleIntf | `Super ] proxy_port
+       i.e. all parent proxy names are included. This allows that the
+       O'Caml coercion operator :> can be used for downcasts!
+
+  class type r_sample_Intf_extractNames =
+  object
+    method hydro_response : Hydro_client.response  (* low-level *)
+    method result : t_sample_StringSeq
+  end
+
+  class type r_sample_Intf_getColor =
+  object
+    method hydro_response : Hydro_client.response  (* low-level *)
+    method result : t_sample_Color
+  end
+
+  class type r_sample_Intf_passDict =
+  object
+    method hydro_response : Hydro_client.response  (* low-level *)
+    method result : unit
+  end
+
+  class type r_sample_Intf_extractSomething =
+  object
+    method hydro_response : Hydro_client.response  (* low-level *)
+    method result : t_sample_StringSeq 
+    method out_d : t_sample_StringDict             (* out param *)
+  end
+
+  class type r_sample_Intf_tellIntf =
+  object
+    method hydro_response : Hydro_client.response  (* low-level *)
+    method result : unit
+  end
+
+  class type r_sample_Intf_getIntf =
+  object
+    method hydro_response : Hydro_client.response  (* low-level *)
+    method result : t_sample_Intf
+  end
+
+  class type p_sample_Intf =
+  object
+    inherit Hydro_proxy.proxy_t
+    method extractNames : 
+             t_sample_StructureSeq -> r_sample_Intf_extractNames call_susp
+    method getColor :
+             unit -> r_sample_Intf_getColor call_susp
+    method passDict :
+             t_sample_StringDict -> r_sample_Intf_passDict call_susp
+    method extractSomething :
+             t_sample_StructureSeq -> r_sample_Intf_extractSomething call_susp
+    method tellIntf :
+             t_sample_Intf -> r_sample_Intf_tellIntf call_susp
+    method getIntf :
+             unit -> r_sample_Intf_getIntf call_susp
+  end
+
+end
+
+----------------------------------------------------------------------
+
+A typical call looks like, when (p : p_sample_Intf):
+
+let r =
+  (p # extractSomething myarg) # scall
+let main_result =
+  r # result
+let d =
+  r # out_d
+
+"scall" = synchronous call, "acall" = asynchronous call.
+
+See below how to get p.
+
+----------------------------------------------------------------------
+
+file_marshal.mli:
+
+contains additionally:
+
+- proxies:
+
+  val to_sample_Intf : Hydro_types.value -> t_sample_Intf
+  val of_sample_Intf : t_sample_Intf -> Hydro_types.value
+
+- call results:
+
+  val r_sample_Intf_extractNames : 
+        Hydro_client.response -> r_sample_Intf_extractNames
+
+
+----------------------------------------------------------------------
+
+file_system.mli:
+
+also adds definitions for the proxy:
+
+(* CHECK:
+Hashtbl.add types "XXX" (`Proxy "::Sample::Intf")
+*)
+
+let intf : hintf =
+  (object
+     method name = "::Sample::Intf"
+     method super = None
+     method elements = [ ( object 
+                             method name = "extractNames"
+                             method in_args = [| "s", ... |]
+                             method in_classes = false
+                             method out_args = [|  |]
+                             method result = `Sequence `String
+                             method out_classes = false
+                           end
+                         );
+                         ...
+                       ]
+   end
+  )
+
+
+Hashtbl.add interfaces intf#name intf;;
+
+
+- Note: it is advisable to enumerate all used types
+  let t1 = `Sequence `String
+  and t2 = ...
+
+- Interface descriptions must be created with respect to the
+  inheritance hierarchy.
+
+----------------------------------------------------------------------
+
+file_clnt.mli:
+
+module Flat_view : sig
+  (* prefix c_ = client *)
+  class c_sample_Intf : Hydro_proxy.env_t -> 
+                        File_types.Flat_view.t_sample_Intf ->
+                        File_types.Flat_view.p_sample_Intf
+  val new_sample_Intf : Hydro_proxy.env_t -> 
+                        Hydro_proxy.extended_proxy_spec ->
+                        File_types.Flat_view.p_sample_Intf
+    (* CHECK: Call this "unchecked_cast" ? *)
+end
+
+
+implementation:
+
+module Flat_view = struct
+
+  class c_sample_Intf env pp =
+    let spec = extract_spec pp in
+    let proxy = env#create_proxy spec in
+    let intf = Hashtbl.find env#sys "::Sample::Intf" in
+  object
+    method hydro_env = env
+    method hydro_... = proxy # hydro_...  (* delegate common methods *)
+
+    method extractNames arg1 =
+      new call_susp
+        (fun cp f ->
+           proxy # hydro_twoway_call
+           intf
+           "extractNames"
+           cp
+           [| of_sample_StructureSeq arg1 |]
+           f
+        )
+
+    ...
+  end
+
+end
+
+----------------------------------------------------------------------
+
+file_casts.mli:
+
+val spec_as_sample_Intf_unchecked : Hydro_proxy.extended_proxy_spec ->
+                                    File_types.Flat_view.t_sample_Intf
+
+- Later:
+  also generate spec_as_sample_Intf_checked
+
+- Later:
+  also generate
+
+  as_sample_Intf : 't proxy_port -> File_types.Flat_view.t_sample_Intf
+
+  that performs a checked cast
+  
+----------------------------------------------------------------------
+
+A proxy could be create manually as in:
+
+let env = Hydro_proxy.default_env esys system ;;   (* TODO *)
+let pspec = Hydro_proxy.proxy_spec_of_string "sample:tcp -p 10000";; (* TODO *)
+let p = new c_sample_Intf env (spec_as_sample_Intf_unchecked pspec)

@@ -1,0 +1,51 @@
+{2 User interface}
+
+{!modules:
+   Hydro_types
+   Hydro_params
+   Hydro_proxy
+   Hydro_lm
+   Hydro_lm_IceObject
+   Hydro_oa
+   Hydro_endpoint
+   Hydro_netplex
+   Hydro_locator
+   Hydro_string
+}
+
+{2 Internals}
+
+{!modules:
+   Hydro_connector
+   Hydro_marshal
+   Hydro_unmarshal
+   Hydro_transport
+   Hydro_message
+}
+
+{2 Hydromon}
+
+{!modules:
+  Hydromon_query
+  Hydromon_netplex
+}
+
+{2 Introductional texts}
+
+{!modules:
+    Hydrodoc_intro
+    Hydrodoc_proxies
+    Hydrodoc_servers
+    Hydrodoc_exceptions
+    Hydrodoc_classes
+    Hydrodoc_meta
+    Hydrodoc_hydromon
+}
+
+{2 Index}
+
+{!indexlist}
+
+{2 Authors}
+
+Gerd Stolpmann and Mika Illouz, for Wink Technologies, Inc.

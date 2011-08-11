@@ -1,0 +1,6 @@
+Printer$(OBJEXT): Printer.cpp Printer.h
+Client$(OBJEXT): Client.cpp Printer.h
+PrinterI$(OBJEXT): PrinterI.cpp PrinterI.h Printer.h
+Server$(OBJEXT): Server.cpp PrinterI.h Printer.h
+Printer.cpp: Printer.ice
+Printer.ice: $(SLICE2CPP) $(SLICEPARSERLIB)

@@ -1,0 +1,39 @@
+FILES = hgen_types hgen_parser_util hgen_parser \
+        hgen_util hgen_lexer hgen_lexer_driver \
+        hgen_simplif hgen_print_il hgen_analyzer hgen_trans_il
+
+OCAMLPACKS = netstring,equeue
+ABORT_ON_DEPENDENCY_ERRORS = true
+
+# needed by omake 0.9.8.1
+LocalOCamlGeneratedFiles( hgen_parser.mli hgen_parser.ml hgen_lexer.ml )
+
+OCamlLibrary ( hydrogen, $(FILES) )
+
+OCAML_LIBS = hydrogen
+
+OCamlProgram(hydrogen, hgen_main)
+
+META: META.in
+        if $(not $(file-exists ../../VERSION))
+	    cd ../..; make VERSION
+        section
+            version=$(gets ../../VERSION)
+            sed -e 's:@VERSION@:$(version):' META.in >META
+
+.DEFAULT: META $(addsuffixes $(LIBSFX),hydrogen) hydrogen
+
+.PHONY: install uninstall
+
+install:
+	ocamlfind install hydrogen \
+                META *.mli *.cmi *.cma hydrogen \
+                -optional *.cmxa *.a
+
+uninstall:
+	ocamlfind remove hydrogen
+
+clean:
+        rm -f *.opt *.run *.o *.a *.cm* *~ *.annot
+	rm -f hgen_parser.ml hgen_parser.mli
+	rm -f hgen_lexer.ml

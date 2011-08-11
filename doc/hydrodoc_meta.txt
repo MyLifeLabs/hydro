@@ -1,0 +1,157 @@
+Metadata annotations
+
+{1 Metadata Annotations}
+
+These annotations come in two forms:
+
+- As global annotations. These are only allowed at the beginning of the
+  ice file:
+  {[ [["some string"]] ]}
+- As local annotations. These can precede every definition, and even
+  every parameter:
+  {[ interface F {
+       ["some string"] long add(int x, ["another string"] int y);
+     }
+   ]}
+
+The global annotations are written in double brackets, whereas the
+local annotations are enclosed in single brackets.
+
+{2 Global Annotations}
+
+Hydro defines the following global annotations:
+
+- [ [["hydro:default:int"]] ]: Use the OCaml type [int] for the ICE type
+  [int], unless a local annotation overrides this
+- [ [["hydro:default:int32"]] ]: Use the OCaml type [int32] for the ICE type
+  [int], unless a local annotation overrides this
+- [ [["hydro:default:mutable"]] ]: The fields of OCaml record types are
+  declared as mutable, unless a local annotation overrides this
+- [ [["hydro:default:immutable"]] ]: The fields of OCaml record types are
+  declared as immutable, unless a local annotation overrides this
+- [ [["hydro:reserve:structprefix:P"]] ], where [P] is an identifier:
+  Don't use [P] as prefix for record fields
+- [ [["hydro:defmapping:NAME:TYPE:TO:OF"]] ]: see below.
+
+{2 Local Annotations}
+
+- [ ["hydro:int"] ]: Use the OCaml type [int] for the ICE type
+  [int], e.g. in the declaration of a sequence
+  {[     sequence< ["hydro:int"] int > mysequence; ]}
+- [ ["hydro:int32"] ]: Use the OCaml type [int32] for the ICE type
+  [int], e.g. in the declaration of a function
+  {[     void doSomething(["hydro:int32"] int arg1, string arg2) ]}
+- [ ["hydro:mutable"] ]: Declare the following record field as mutable,
+  e.g.
+  {[     struct s { int field1, ["hydro:mutable"] string field2 } ]}
+- [ ["hydro:immutable"] ]: Declare the following record field as immutable,
+  e.g.
+  {[     struct s { int field1, ["hydro:immutable"] string field2 } ]}
+- [ ["hydro:tuple"] ]: The [struct] is mapped to an OCaml tuple instead
+  of an OCaml record type, e.g.
+  {[     ["hydro:tuple"] struct s { int field1, string field2 } ]}
+  is mapped to [ int * string ].
+- [ ["hydro:structprefix:P"] ], where [P] is an identifier:
+  Use [P] as prefix for the record type, e.g.
+  {[     ["hydro:structprefix:foo"] struct s { int field1, string field2 } ]}
+  would be mapped to the OCaml type
+  {[     { foo_field1 : int; foo_field2 : string } ]}
+  It might be useful to reserve such prefixes with the 
+  [hydro:reserve:structprefix] global annotations to prevent that the
+  prefix is automatically chosen for another record type
+- [ ["hydro:equals:T"] ] where [T] is an OCaml type expression:
+  Declare the generated record type to be equal to [T]. For example, for
+  {[     ["hydro:equals:Q.s"] struct s { int field1, string field2 } ]}
+  the OCaml type
+  {[     type s = Q.s = { s_field1 : int; s_field2 : string } ]}
+  would be generated.
+- [ ["hydro:name:ID"] ] where [ID] is an OCaml identifier:
+  Use [ID] as mapped name for modules, interfaces, classes, members,
+  etc. (Does not work for the tags of enumerations, however.)
+  This overrides the automatically generated name.
+- [ ["hydro:mapping:NAME"] ]: see below.
+
+
+{2 User-Defined Mappings}
+
+Hydro has a simple, but quite powerful way for enhancing the built-in
+language mapping. Given that Hydro's native representation of an
+ICE type would be the OCaml type [T], one can instruct [hydrogen]
+to use an alternate type [T'] instead, provided two functions exist
+that map [T->T'] and [T'->T].
+
+There are a few predefined enhancements:
+
+- [ ["hydro:mapping:list"] ]: If applied to the declaration of a 
+  sequence, Hydro will represent the sequence as list and not as
+  array. For example:
+  {[     ["hydro:mapping:list"] sequence<long> long_list ]}
+- [ ["hydro:mapping:option"] ]: If applied to the declaration of a 
+  sequence, Hydro will represent the sequence as option type and not as
+  array. This makes a lot of sense because there is no option type
+  in ICE, and it is common to (ab)use sequences when an option type
+  were really meant. - For example: 
+  {[     ["hydro:mapping:option"] sequence<long> long_option ]}
+  The unmarshaller will now fail if a [long_option] sequence is seen
+  with more than 1 element.
+- [ ["hydro:mapping:hashtbl"] ]:  If applied to the declaration of a 
+  dictionary, Hydro will represent the dictionary as hash table and not as
+  associative list. For example:
+  {[     ["hydro:mapping:hashtbl"] dictionary<string,int> wordcount ]}
+- [ ["hydro:mapping:strmap"] ]:  If applied to the declaration of a 
+  dictionary, Hydro will represent the dictionary as string map and not as
+  associative list. For example:
+  {[     ["hydro:mapping:strmap"] dictionary<string,int> wordcount ]}
+  Note that this is only allowed if the dictionary key is [string] -
+  if not, you get an error when you try to compile the generated code.
+  The [module StrMap = Map.Make(String)] is defined in {!Hydro_lm}.
+- [ ["hydro:mapping:complex"] ]: If applied to the declaration of
+  a [struct] with two floating-point fields (either [float] or 
+  [double]), Hydro will change the type to [Complex.t], i.e. the 
+  [struct] is taken as complex number.
+- [ ["hydro:mapping:identity"] ]: This is used to represent the
+  struct [Ice::Identity] as O'Caml type {!Hydro_types.identity}
+
+In order to define you own enhancement, you need first to define the
+new mapping with the global annotation [ [["hydro:defmapping:NAME:..."]] ],
+so you can later refer to it using [ ["hydro:mapping:NAME"] ] just as
+to the predefined mappings. The syntax to define the mapping is
+
+[ [["hydro:defmapping:NAME:TYPE:TO:OF"]] ]
+
+Here,
+- [NAME] is the name the mapping can be referred to
+- [TYPE] is the OCaml type expression of what we've called [T']
+  before. For example, if you would like to represent sequences of strings as
+  lists, you could set this to [string list]. It is also possible to
+  denote parametric types. You can refer to the argument type of sequences
+  as [$1], so [$1 list] would be a generic list. For dictionaries, the
+  left argument type is referenced with [$1], and the right one with
+  [$2]. For structs, the field types are referenced as [$1], [$2], [$3],
+  and so on, in the order of declaration.
+- [TO] is an OCaml expression of a function that converts [T] to [T']
+- [OF] is an OCaml expression of a function that converts [T'] to [T]
+
+A simple example is
+
+{[ [["hydro:defmapping:stringlist:string list:Array.to_list:Array.of_list"]] ]}
+
+which can be applied to ICE string sequences in order to represent
+them as OCaml string lists. Note that we have to convert to and from 
+arrays as Hydro's native representation of sequences are arrays.
+
+As a special rule, applying a mapping to a [struct] implicitly also
+enables [ ["hydro:tuple"] ], as it would be difficult to define the
+functions [TO] and [OF] for record types.
+
+The definitions for the predefined mappings are:
+
+{[
+[["hydro:defmapping:list:$1 list:Array.to_list:Array.of_list"]]
+[["hydro:defmapping:option:$1 option:Hydro_lm.seq_to_option:Hydro_lm.option_to_seq"]]
+[["hydro:defmapping:hashtbl:($1,$2)Hashtbl.t:Hydro_lm.dict_to_hashtbl:Hydro_lm.hashtbl_to_dict"]]
+[["hydro:defmapping:strmap:($1,$2)Hydro_lm.strmap:Hydro_lm.dict_to_strmap:Hydro_lm.strmap_to_dict"]]
+[["hydro:defmapping:complex:($1,$2)Hydro_lm.complex:Hydro_lm.pair_to_complex:Hydro_lm.complex_to_pair"]]
+[["hydro:defmapping:identity:Hydro_types.identity:Hydro_lm.pair_to_identity:Hydro_lm.identity_to_pair"]]
+]}
+

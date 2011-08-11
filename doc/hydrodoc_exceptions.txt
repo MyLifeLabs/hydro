@@ -1,0 +1,365 @@
+{1 Exceptions}
+
+O'Caml does not support subtyping for exceptions, i.e. we cannot give
+a nice exception hierarchy here. Predefined exceptions are:
+
+- {!Hydro_types.Protocol_violation}: A low-level violation of the
+  ICE protocol format
+- {!Hydro_types.Marshal_error}: A value cannot be marshalled to
+  a string message in order to be sent over the connection
+- {!Hydro_types.Unmarshal_error}: A received string message cannot be
+  decoded to a structured value
+- {!Hydro_types.Limitation}: A limitation of Hydro has been tried
+  to exceed
+- {!Hydro_types.Proxy_error}: The proxy cannot do an operation
+- {!Hydro_lm.Error}: An error occurred in the generated code.
+  The argument number indicates the position.
+- {!Hydro_lm.Invalid_coercion}: An object cannot be coerced as
+  demanded (raised by the generated [as_type] functions).
+
+These exceptions only exist locally and cannot be transmitted
+from a server to a client.
+
+
+{2 Remote exceptions}
+
+There are only a few types of exceptions that can be transferred over
+ICE connections. These types are not directly exceptions in the O'Caml
+sense, and represented differently in client and server code.
+
+- {b User exception:} This type of exception is declared in the
+  Slice file (e.g. "[exception Foo { string message; }]"). The
+  Hydro runtime deals with these exception only in a very
+  inconvenient way: Client code will get a
+  {!Hydro_types.Client_condition} with a [`User_exception] 
+  parameter when it is tried to read a result value from an
+  invocation of a remote operation that has thrown an exception.
+  The parameter is not language-mapped. Server code can send
+  this exception as result of an operation by calling
+  the [emit_user_exception] method of the {!Hydro_types.session}
+  object. Again the parameter is difficult to handle. Fortunately,
+  [hydrogen] generates special code that translates such exceptions
+  for both clients and servers to easy O'Caml types. See below
+  for more about this.
+- {b Unknown user exception:} Operations of ICE objects must 
+  declare which user exceptions can be thrown ([throws] clause).
+  If the implementation does not stick to the declaration, and 
+  throws different exceptions, these user exceptions are converted
+  to unknown user exceptions by the server. Client code will get
+  a {!Hydro_types.Client_condition} with an [`Unknown_user_exception]
+  parameter. Server code should not try to actively send such
+  exceptions.
+- {b Unknown local exception:} The ZeroC implementation of ICE
+  sends these exceptions when a {b known} ICE exception is caught
+  by the runtime. The Hydro runtime does not send such exceptions.
+  Nevertheless, Hydro clients can get these exceptions when talking
+  to ZeroC-driven servers. They will get a {!Hydro_types.Client_condition}
+  with an [`Unknown_local_exception] parameter in this case.
+- {b Object does not exist:} Servers send these exception when
+  an unknown object is invoked. Client code will get a
+  {!Hydro_types.Client_condition} with an [`Object_does_not_exist]
+  parameter.
+- {b Facet does not exist:} Servers send these exception when
+  an unknown facet is invoked. Client code will get a
+  {!Hydro_types.Client_condition} with a [`Facet_does_not_exist]
+  parameter.
+- {b Operation does not exist:} Servers send these exception when
+  an unknown operation is invoked. Client code will get a
+  {!Hydro_types.Client_condition} with an [`Operation_does_not_exist]
+  parameter.
+- {b Unknown exception:} These are all remaining cases: When
+  the server runtime catches an exception while performing an
+  operation that does not match one of the above types,
+  the exception is send as unknown one. Client code will get a
+  {!Hydro_types.Client_condition} with an [`Unknown_exception]
+  parameter. Server code can invoke the [emit_unknown_exception] 
+  method of the {!Hydro_types.session} object.
+
+
+{2 User exceptions}
+
+As mentioned, user exceptions are defined in the Slice file.  Such
+exceptions are hierarchical, which is not supported by O'Caml
+exceptions. For this reason, a special mapping is applied, so that all
+user exceptions appear as [User_exception] with a parameter that
+represents the hierarchy (among other things).  An example shows how
+this works. Given a Slice definition
+
+{[
+  exception X {
+    string text;
+  };
+
+  exception Y extends X {
+    string detail;
+  };
+]}
+
+[hydrogen] maps this to
+
+{[
+  type exception_name = [ `X | `Y ]
+
+  and exception_ops =
+    < exn_name : exception_name;
+      exn_id : string;
+      is_X : bool;
+      as_X : t_X;
+      is_Y : bool;
+      as_Y : t_Y;
+    >
+
+  and t_X =
+    < hydro_ops : exception_ops;
+      text : string
+    >
+
+  and t_Y =
+    < hydro_ops : exception_ops;
+      text : string;
+      detail : string;
+    >
+
+  and user_exception =
+    < hydro_ops : exception_ops >
+
+  exception User_exception of user_exception
+
+]}
+
+Note that the [<...>] notation means O'Caml object types. They are
+seldom used, but are quite useful in this context. As you can see,
+every user exception has its own object type that allows access to
+exception arguments like [text] and [detail], and that also has a
+method [hydro_ops] for common properties. The type [user_exception] is
+the (artificially added) root of the exception hierarchy, and besides
+[hydro_ops] nothing is accessible. The O'Caml exception
+[User_exception] is defined and takes only such a root object as
+argument.
+
+So if you catch a [User_exception] you have only [hydro_ops] to
+analyze it:
+
+- [exn_name] is a symbolic name of the exception type. This always
+  reflects the runtime (dynamic) type, not the statically approved
+  type
+- [exn_id] is the ICE type ID of the exception type
+- [is_<name>] tests whether an exception is of the corresponding type
+  or subtype. For example, an [Y] exception is a sub exception of
+  [X], and this means that for every instance of [Y] the [is_X] 
+  method will return [true]
+- [as_<name>] coerces the given exception to another exception type.
+  The coercion succeeds if the runtime type is a subtype of the
+  demanded type. Otherwise, the O'Caml exception
+  {!Hydro_lm.Invalid_coercion} is raised
+
+Like objects the ICE user exceptions have a runtime type which may
+deviate from the type statically assigned in the code.  When an
+exception is upcasted to a super exception, the runtime type
+remains the same, and a later downcast is possible. For instance,
+given that [y] is a [t_Y]:
+
+{[
+  let sample (y : t_Y) =
+    let x = (y :> t_X) in
+    let y' = x # hydro_ops # as_Y in
+    y'
+]}
+
+For upcasts, one can simply use the O'Caml [:>] operator. For
+downcasts, there is the generated [as_Y] method. Note that the
+exception object remains really the same, so [y = sample y]
+is always true.
+
+
+{2 Catching user exceptions in client code}
+
+Now when you catch a [User_exception], how can you distinguish between
+the several Slice exceptions, and how can you get the arguments? Do
+it this way:
+
+{[
+  try
+     let r = response # result in
+     ...
+  with
+  | User_exception ue when ue#hydro_ops#is_Y ->
+      let y = ue#hydro_ops#as_Y in
+      printf "Exception Y: text = %s detail = %s" x#text x#detail
+  | User_exception ue when ue#hydro_ops#is_X ->
+      let x = ue#hydro_ops#as_X in
+      printf "Exception X: text = %s" x#text
+]}
+
+(Assumed, [response] is what you get by invoking a remote operation
+using a generated proxy class.)  Of course, we test first for [Y]
+because all [Y] exception are also [X] exceptions because of the
+exception hierarchy (i.e. [is_X] is true for all [Y] exceptions).
+
+Alternatively:
+
+{[
+  try
+     let r = response # result in
+     ...
+  with
+  | User_exception ue  ->
+    ( match ue#hydro_ops#exn_name with
+      | `X ->
+           let x = ue#hydro_ops#as_X in
+           printf "Exception X: text = %s" x#text
+      | `Y ->
+           let y = ue#hydro_ops#as_Y in
+           printf "Exception Y: text = %s detail = %s" x#text x#detail
+    )
+]}
+
+The latter is advantageous when you want to ensure that all possible
+exceptions are caught. [exn_name] always returns the name of the
+exception that was really thrown, so the order of [X] and [Y] does not
+matter here.
+
+
+{2 Creating user exceptions}
+
+Of course, [hydrogen] also generates constructors for user exceptions,
+so it isn't necessary to develop exception classes. In our example,
+there are these two generated functions:
+
+{[
+  val x_X : string -> t_X
+  val x_Y : string -> string -> t_Y
+]}
+
+The single argument of [x_X] is the [text] argument of the [X]
+exception, and the two arguments of [x_Y] are the [detail] and the
+[text] arguments of the [Y] exception. Arguments are passed in
+derived-to-base order, i.e.  more specific arguments come first.
+
+
+{2 Throwing user exceptions in server code}
+
+Given an interface
+
+{[
+  interface F {
+    int doSomething(string arg) throws Y;
+  }
+]}
+
+how do we throw the [Y] exception in the implementation? Recall that we
+implement servers by inheriting from skeleton classes:
+
+{[
+  class myServant =
+  object(self)
+    inherit skel_F
+    method doSomething arg = ...
+  end
+]}
+
+The question is now: how does the exception handling work in this context?
+
+Generally, there are two ways of implementing [doSomething]: as a
+synchronous method, or as an asynchronous method. The first case is
+much simpler, as the implementation looks like
+
+{[
+  method doSomething arg =
+    parachute
+      (fun session ->
+        ...
+      )
+]}
+
+Here, [parachute] is the generated protection function that ensures
+that the method always returns a result or an exception (in other
+words that it is synchrounous). Within the part denoted by "..." 
+you can safely
+
+- raise [User_exception] to jump immediately out of the computation
+  with a declared user exception, e.g.
+  {[
+    raise(User_exception(x_Y "code 1234" "bad things happened" :>
+                           user_exception))
+   ]}
+- raise [User_exception] with an undeclared user exception (that does
+  not appear in the [throws] clause). The generated code takes care
+  of converting it to an unknown user exception.
+- raise any other O'Caml exception. The generated code will emit
+  an unknown exception in this case.
+
+Using a [parachute] is strongly recommended.
+
+Now to the second, asynchronous case. It is useful if you want to
+accept the operation invocation, but wait some time until the response
+is sent. Of cource, the [parachute] is generally not applicable here,
+so we have to look for other means of passing exceptions. The 
+implementation looks now like
+
+{[
+  method doSomething arg =
+    (fun emit_result emit_user_exception session ->
+       ...
+    )
+]}
+
+In this form, there is no handler that would catch O'Caml exceptions
+thrown in the part denoted by "...". Any O'Caml exception would fall
+through the whole Hydro runtime, and jump back to the caller of
+[Unixqueue.run]! Actually, this is a way of terminating the server
+immediately (unless the caller of [Unixqueue.run] deals with exception
+which is strongly recommended). Life becomes dangerous without
+parachute.
+
+In the "..." part, or anytime later you can
+
+- emit the result of the operation by calling [emit_result]. This
+  function takes a response object.
+- emit a user exception by calling [emit_user_exception]. This
+  function takes a [user_exception] object.
+- emit another transmissible exception by calling one of the
+  methods of the [session] object (which is a 
+  {!Hydro_types.session}), for example [session#emit_unknown_exception].
+
+Any of the "emit" functions or methods triggers that the response
+message is sent back to the client. If you call several "emit"
+functions the later calls override the effect of the former, provided
+that the response is still only queued, but not yet actively being
+sent.
+
+Here an example that delays the response by 10 seconds:
+
+{[
+  method doSomething arg =
+    (fun emit_result emit_user_exception session ->
+      let g = Unixqueue.new_group session#event_system in
+      Unixqueue.once session#event_system g 10.0
+        (fun () ->
+          let response = ... in
+          emit_result response
+        )
+    )
+]}
+
+During the delay the server is still responsive, and can process
+other operations.
+
+Note that there is not any mechanism in Hydro that takes care of that
+an operation is responded at all. It is just possible to forget about
+invocations. If you want to avoid it, we recommend to define a
+GC finaliser like
+
+{[
+  Gc.finalise 
+    (fun s -> 
+      if not s#is_responded then
+         prerr_endline "Forgot to respond!"
+    ) 
+    session
+]}
+
+for the session object. The O'Caml runtime, and that may it make
+difficult to do more than printing a reminder to stderr, can execute
+the finaliser at any time in any thread. This is also the reason
+why Hydro doesn't do it by default.
