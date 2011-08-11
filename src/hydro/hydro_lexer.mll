@@ -1,5 +1,3 @@
-(* $Id$ *)
-
 {
   type token =
     | Chars of string

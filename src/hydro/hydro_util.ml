@@ -1,5 +1,3 @@
-(* $Id$ *)
-
 open Hydro_types
 
 let t_proxy : htype =

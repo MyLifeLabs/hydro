@@ -1,5 +1,3 @@
-(* $Id$ *)
-
 let debug_log = ref None
 let set_debug_log f = debug_log := Some f
 (* To enable debug logging, call set_debug_log with a function that

@@ -1,5 +1,3 @@
-(* $Id$ *)
-
 (** Query a running Hydromon instance for the liveliness of a port *)
 
 type cache

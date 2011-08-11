@@ -1,5 +1,3 @@
-(* $Id$ *)
-
 open Hgen_types
 open Hgen_types.IL
 

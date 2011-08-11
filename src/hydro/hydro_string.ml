@@ -1,5 +1,3 @@
-(* $Id$ *)
-
 open Hydro_lexer
 open Printf
 

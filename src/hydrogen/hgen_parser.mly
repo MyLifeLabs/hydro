@@ -1,5 +1,4 @@
-%{ (* $Id$ *)
-  (* Header *)
+%{
   open Hgen_types
   open Hgen_types.AST
 %}

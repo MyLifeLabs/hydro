@@ -1,5 +1,3 @@
-(* $Id$ *)
-
 open Netplex_types
 
 (* Semaphore implementation: This impl. is quite problematic, but the best

@@ -1,5 +1,3 @@
-(* $Id$ *)
-
 (** (Packed) Hydro messages *)
 
 open Hydro_types

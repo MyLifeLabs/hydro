@@ -1,5 +1,3 @@
-(* $Id$ *)
-
 (* Symbol table stuff etc. *)
 
 open Hgen_types

@@ -1,5 +1,3 @@
-(* $Id$ *)
-
 type loc = 
   { file : string;
     line : int;     (* Line number, starting with 1 *)

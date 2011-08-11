@@ -1,5 +1,3 @@
-(* $Id$ *)
-
 open Hgen_types;;
 
 let initial_comment f name =

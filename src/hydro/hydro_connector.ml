@@ -1,5 +1,3 @@
-(* $Id$ *)
-
 open Hydro_types
 open Hydro_util
 

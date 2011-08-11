@@ -1,5 +1,3 @@
-(* $Id$ *)
-
 (** Base proxy functionality *)
 
 (** Proxies

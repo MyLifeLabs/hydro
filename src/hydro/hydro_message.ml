@@ -1,5 +1,3 @@
-(* $Id$ *)
-
 open Hydro_types
 
 let read_msg_header s pos =

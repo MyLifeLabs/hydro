@@ -1,8 +1,3 @@
-(* $Id$
- * ----------------------------------------------------------------------
- *
- *)
-
 (* This module is derived from OCamlnet's rpc_transport.mli *)
 
 open Hydro_types

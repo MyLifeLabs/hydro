@@ -1,6 +1,3 @@
-(* $Id$ *)
-
-
 (* This is an adaption of Ocamlnet's rpc_client.ml *)
 
 open Hydro_types

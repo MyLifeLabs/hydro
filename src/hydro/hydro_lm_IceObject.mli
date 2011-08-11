@@ -1,5 +1,3 @@
-(* $Id$ *)
-
 (** The default [::Ice::Object] *)
 
 (** This modules is used by the generated language mapping layer to

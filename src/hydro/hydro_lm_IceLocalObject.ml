@@ -1,5 +1,3 @@
-(* $Id$ *)
-
 class type od_Ice_LocalObject =
 object
 end

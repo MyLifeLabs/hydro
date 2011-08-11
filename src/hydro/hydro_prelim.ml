@@ -1,5 +1,3 @@
-(* $Id$ *)
-
 module CiString = struct  (* case-insensitive *)
   type t = string
   let equal s1 s2 =

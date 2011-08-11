@@ -1,5 +1,3 @@
-(* $Id$ *)
-
 open Hgen_types
 
 (* Meta defs *)

@@ -1,4 +1,4 @@
-{ (* $Id$ *)
+{
   open Hgen_types
   open Hgen_parser
   open Hgen_util

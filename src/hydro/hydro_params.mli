@@ -1,5 +1,3 @@
-(* $Id$ *)
-
 (** Creating and modifying runtime parameters *)
 
 open Hydro_types

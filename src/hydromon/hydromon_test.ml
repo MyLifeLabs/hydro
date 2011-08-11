@@ -1,5 +1,3 @@
-(* $Id$ *)
-
 (* Test server *)
 
 open Printf

@@ -1,5 +1,3 @@
-(* $Id$ *)
-
 (** Establish connections between a local endpoint and a remote endpoint *)
 
 (** {1 Managing connections} *)

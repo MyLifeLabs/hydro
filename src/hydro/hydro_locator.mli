@@ -1,5 +1,3 @@
-(* $Id$ *)
-
 (** Use locator service for proxy resolution (IceGrid) *)
 
 open Hydro_builtin

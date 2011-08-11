@@ -1,5 +1,3 @@
-(* $Id$ *)
-
 (** Base definitions for the language mapping *)
 
 (** Specific types and functions for the O'Caml language mapping.

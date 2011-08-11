@@ -1,5 +1,3 @@
-(* $Id$ *)
-
 (** Parse/print various data structures as strings *)
 
 (** The syntax of the string representations is defined in the

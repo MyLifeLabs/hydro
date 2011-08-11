@@ -1,5 +1,3 @@
-(* $Id$ *)
-
 (** Basic type and exception definitions *)
 
 (** {1 Exceptions} *)

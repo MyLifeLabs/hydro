@@ -1,5 +1,3 @@
-(* $Id$ *)
-
 (** Preliminaries *)
 
 module CiString : sig

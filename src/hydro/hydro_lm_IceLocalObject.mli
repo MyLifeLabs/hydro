@@ -1,5 +1,3 @@
-(* $Id$ *)
-
 (* This is the proxy view on Ice::LocalObject *)
 
 (* A proxy view on such object does not exist *)

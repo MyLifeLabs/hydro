@@ -1,4 +1,3 @@
-// $Id$ -*- c -*-
 // Definitions for built-in protocols
 
 module Ice {

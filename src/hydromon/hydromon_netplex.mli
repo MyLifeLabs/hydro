@@ -1,5 +1,3 @@
-(* $Id$ *)
-
 (** Hydromon: Monitor ICE services by pinging them constantly *)
 
 type config =

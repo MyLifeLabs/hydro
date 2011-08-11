@@ -1,5 +1,3 @@
-(* $Id$ *)
-
 (** Hydro unmarshalling *)
 
 open Hydro_types

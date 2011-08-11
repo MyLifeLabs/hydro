@@ -1,5 +1,3 @@
-(* $Id$ *)
-
 open Hydromon_proto
 open Hydromon_util
 open Printf

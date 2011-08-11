@@ -1,5 +1,3 @@
-(* $Id$ *)
-
 (** Netplex support for Hydro servers (TCP only) *)
 
 open Netplex_types

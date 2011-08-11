@@ -1,5 +1,3 @@
-(* $Id$ *)
-
 (** Object adapters *)
 
 (** Object adapters are registries of objects that are known to the
